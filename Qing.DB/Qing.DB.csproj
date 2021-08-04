@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>NET461;netstandard2.0;netstandard2.1;netcoreapp3.1;netcoreapp5;</TargetFrameworks>
+    <AssemblyName>Qing.DB</AssemblyName>
+    <RootNamespace>Qing.DB</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.0.1</Version>
+    <Description>修复存储过程查询传参BUG</Description>
+    <Authors>XuQing</Authors>
+    <PackageReleaseNotes>基于Dapper的ORM组件，特点是支持多租户，分表</PackageReleaseNotes>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <AssemblyVersion>1.0.0.1</AssemblyVersion>
+    <FileVersion>1.0.0.1</FileVersion>
+
+  </PropertyGroup>
+
+
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.0.90" />
+    <PackageReference Include="MySql.Data" Version="8.0.25" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+  </ItemGroup>
+
+</Project>

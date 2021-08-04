@@ -1,0 +1,15 @@
+/.vs
+/Elegant.DB.Core/bin
+/Elegant.DB.Core/obj
+/Elegant.Entity.StoreEntity/obj
+/Elegant.Entity.StoreEntity/bin
+/Elegant.CodeMaker/obj
+/Elegant.CodeMaker/bin
+/Demo/obj
+/Demo/Properties
+/Demo/bin
+/packages
+/Elegant.DB.Cache/obj
+/Elegant.DB.Cache/bin
+/Qing.DB/obj
+/Qing.DB/bin
