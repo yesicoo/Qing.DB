@@ -192,13 +192,13 @@ namespace Qing.DB.QingQuery
             {
                 sb_sql.Append($" where {WhereStr}");
             }
-            if (!string.IsNullOrEmpty(OrderByStr))
-            {
-                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
-            }
             if (!string.IsNullOrEmpty(GroupByStr))
             {
                 sb_sql.Append($" Group By {GroupByStr}");
+            }
+            if (!string.IsNullOrEmpty(OrderByStr))
+            {
+                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
             }
             if (!string.IsNullOrEmpty(Limit))
             {
@@ -443,13 +443,13 @@ namespace Qing.DB.QingQuery
             {
                 sb_sql.Append($" where {WhereStr}");
             }
-            if (!string.IsNullOrEmpty(OrderByStr))
-            {
-                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
-            }
             if (!string.IsNullOrEmpty(GroupByStr))
             {
                 sb_sql.Append($" Group By {GroupByStr}");
+            } 
+            if (!string.IsNullOrEmpty(OrderByStr))
+            {
+                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
             }
             if (!string.IsNullOrEmpty(Limit))
             {
@@ -551,13 +551,13 @@ namespace Qing.DB.QingQuery
             {
                 sb_sql.Append($" where {WhereStr}");
             }
-            if (!string.IsNullOrEmpty(OrderByStr))
-            {
-                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
-            }
             if (!string.IsNullOrEmpty(GroupByStr))
             {
                 sb_sql.Append($" Group By {GroupByStr}");
+            }  
+            if (!string.IsNullOrEmpty(OrderByStr))
+            {
+                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
             }
             if (!string.IsNullOrEmpty(Limit))
             {
@@ -805,13 +805,13 @@ namespace Qing.DB.QingQuery
             {
                 sb_sql.Append($" where {WhereStr}");
             }
-            if (!string.IsNullOrEmpty(OrderByStr))
-            {
-                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
-            }
             if (!string.IsNullOrEmpty(GroupByStr))
             {
                 sb_sql.Append($" Group By {GroupByStr}");
+            } 
+            if (!string.IsNullOrEmpty(OrderByStr))
+            {
+                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
             }
             if (!string.IsNullOrEmpty(Limit))
             {
@@ -1233,13 +1233,13 @@ namespace Qing.DB.QingQuery
             {
                 sb_sql.Append($" where {WhereStr}");
             }
-            if (!string.IsNullOrEmpty(OrderByStr))
-            {
-                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
-            }
             if (!string.IsNullOrEmpty(GroupByStr))
             {
                 sb_sql.Append($" Group By {GroupByStr}");
+            } 
+            if (!string.IsNullOrEmpty(OrderByStr))
+            {
+                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
             }
             if (!string.IsNullOrEmpty(Limit))
             {
@@ -1489,13 +1489,13 @@ namespace Qing.DB.QingQuery
             {
                 sb_sql.Append($" where {WhereStr}");
             }
-            if (!string.IsNullOrEmpty(OrderByStr))
-            {
-                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
-            }
             if (!string.IsNullOrEmpty(GroupByStr))
             {
                 sb_sql.Append($" Group By {GroupByStr}");
+            }  
+            if (!string.IsNullOrEmpty(OrderByStr))
+            {
+                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
             }
             if (!string.IsNullOrEmpty(Limit))
             {
@@ -1742,13 +1742,13 @@ namespace Qing.DB.QingQuery
             {
                 sb_sql.Append($" where {WhereStr}");
             }
-            if (!string.IsNullOrEmpty(OrderByStr))
-            {
-                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
-            }
             if (!string.IsNullOrEmpty(GroupByStr))
             {
                 sb_sql.Append($" Group By {GroupByStr}");
+            } 
+            if (!string.IsNullOrEmpty(OrderByStr))
+            {
+                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
             }
             if (!string.IsNullOrEmpty(Limit))
             {
@@ -1999,13 +1999,13 @@ namespace Qing.DB.QingQuery
             {
                 sb_sql.Append($" where {WhereStr}");
             }
-            if (!string.IsNullOrEmpty(OrderByStr))
-            {
-                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
-            }
             if (!string.IsNullOrEmpty(GroupByStr))
             {
                 sb_sql.Append($" Group By {GroupByStr}");
+            }
+            if (!string.IsNullOrEmpty(OrderByStr))
+            {
+                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
             }
             if (!string.IsNullOrEmpty(Limit))
             {
@@ -2220,13 +2220,13 @@ namespace Qing.DB.QingQuery
             {
                 sb_sql.Append($" where {WhereStr}");
             }
-            if (!string.IsNullOrEmpty(OrderByStr))
-            {
-                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
-            }
             if (!string.IsNullOrEmpty(GroupByStr))
             {
                 sb_sql.Append($" Group By {GroupByStr}");
+            } 
+            if (!string.IsNullOrEmpty(OrderByStr))
+            {
+                sb_sql.Append($" Order By {OrderByStr.TrimStart(',')}");
             }
             if (!string.IsNullOrEmpty(Limit))
             {
