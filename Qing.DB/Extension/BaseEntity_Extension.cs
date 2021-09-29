@@ -1497,6 +1497,10 @@ namespace Qing.DB
                     if (pro.PropertyType == typeof(decimal))
                     {
                         fValue = ((decimal)pro.GetValue(self)).ToString("#.##############");
+                        if (string.IsNullOrEmpty(fValue))
+                        {
+                            fValue = "0.00";
+                        }
                         sValue = ((decimal)pro.GetValue(source)).ToString("#.##############");
                     }
                     else
@@ -1708,6 +1712,10 @@ namespace Qing.DB
                     else if (item.PropertyType == typeof(decimal))
                     {
                         var selfValue = Convert.ToDecimal(item.GetValue(self)).ToString("#.###################");
+                        if (string.IsNullOrEmpty(selfValue))
+                        {
+                            selfValue = "0.00";
+                        }
                         var sourceValue = Convert.ToDecimal(item.GetValue(source)).ToString("#.###################");
                         if (selfValue != sourceValue)
                         {
@@ -1775,6 +1783,10 @@ namespace Qing.DB
                     else if (item.PropertyType == typeof(decimal))
                     {
                         var selfValue = Convert.ToDecimal(item.GetValue(self)).ToString("#.###################");
+                        if (string.IsNullOrEmpty(selfValue))
+                        {
+                            selfValue = "0.00";
+                        }
                         var sourceValue = Convert.ToDecimal(item.GetValue(source)).ToString("#.###################");
                         if (selfValue != sourceValue)
                         {

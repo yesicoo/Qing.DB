@@ -14,9 +14,9 @@ namespace Qing.DB
     {
 
         #region Where
-        internal static QingQuery<T> ResoveWhereExpression<T>(QingQuery<T> nt, Expression<Func<T, bool>> expression,string tag=null) where T : BaseEntity
+        internal static QingQuery<T> ResoveWhereExpression<T>(QingQuery<T> nt, Expression<Func<T, bool>> expression, string tag = null) where T : BaseEntity
         {
-            var ps = ResoveExpression(expression.Body,tag:tag);
+            var ps = ResoveExpression(expression.Body, tag: tag);
             nt.SqlParams.AddDynamicParams(ps.Params);
             nt.WhereStr += string.IsNullOrEmpty(nt.WhereStr) ? $"({ps.SqlStr})" : $" and ({ps.SqlStr}) ";
             return nt;
@@ -147,7 +147,7 @@ namespace Qing.DB
             where T10 : BaseEntity
 
         {
-            var ps = ResoveExpression(expression.Body,tag:tag);
+            var ps = ResoveExpression(expression.Body, tag: tag);
             nt.SqlParams.AddDynamicParams(ps.Params);
             nt.WhereStr += string.IsNullOrEmpty(nt.WhereStr) ? $"({ps.SqlStr})" : $" and ({ps.SqlStr}) ";
             return nt;
@@ -156,9 +156,9 @@ namespace Qing.DB
         #endregion
 
         #region Select
-        internal static QingQuery<T> ResoveSelectExpression<T, TResult>(QingQuery<T> nt, Expression<Func<T, TResult>> expression, bool selectAlias = false,string tag=null) where T : BaseEntity
+        internal static QingQuery<T> ResoveSelectExpression<T, TResult>(QingQuery<T> nt, Expression<Func<T, TResult>> expression, bool selectAlias = false, string tag = null) where T : BaseEntity
         {
-            var ps = ResoveExpression(expression.Body, selectAlias,tag);
+            var ps = ResoveExpression(expression.Body, selectAlias, tag);
             nt.SqlParams.AddDynamicParams(ps.Params);
             nt.Fields += ps.SqlStr;
             return nt;
@@ -168,7 +168,7 @@ namespace Qing.DB
         {
 
             var ttype = typeof(T);
-            var nea = Tools.GetNEA(ttype,tag);
+            var nea = Tools.GetNEA(ttype, tag);
             var func = (expression.Body as NewExpression);
             var properties = ttype.GetProperties();
 
@@ -351,7 +351,7 @@ namespace Qing.DB
             where T10 : BaseEntity
         {
 
-            var ps = ResoveExpression(expression.Body,selectAlias,tag);
+            var ps = ResoveExpression(expression.Body, selectAlias, tag);
             nt.SqlParams.AddDynamicParams(ps.Params);
             nt.Fields += ps.SqlStr;
             return nt;
@@ -362,7 +362,7 @@ namespace Qing.DB
 
         internal static QingQuery<T> ResoveOrderByExpression<T, TResult>(QingQuery<T> nt, Expression<Func<T, TResult>> expression, bool Desc = false, string tag = null) where T : BaseEntity
         {
-            var ps = ResoveExpression(expression.Body,tag:tag);
+            var ps = ResoveExpression(expression.Body, tag: tag);
             nt.SqlParams.AddDynamicParams(ps.Params);
             nt.OrderByStr += "," + ps.SqlStr + (Desc ? " Desc" : "");
             return nt;
@@ -573,7 +573,7 @@ namespace Qing.DB
         }
         internal static QingQuery<T, T2, T3, T4, T5, T6, T7, T8, T9, T10> ResoveMaxExpression<T, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(QingQuery<T, T2, T3, T4, T5, T6, T7, T8, T9, T10> nt, Expression<Func<T, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>> expression, string tag = null) where T : BaseEntity where T2 : BaseEntity where T3 : BaseEntity where T4 : BaseEntity where T5 : BaseEntity where T6 : BaseEntity where T7 : BaseEntity where T8 : BaseEntity where T9 : BaseEntity where T10 : BaseEntity
         {
-            var ps = ResoveExpression(expression.Body,tag:tag);
+            var ps = ResoveExpression(expression.Body, tag: tag);
             nt.SqlParams.AddDynamicParams(ps.Params);
             nt.Fields = $"Max({ps.SqlStr})";
             return nt;
@@ -751,7 +751,7 @@ where T3 : BaseEntity
           where T9 : BaseEntity
             where T10 : BaseEntity
         {
-            return ResoveExpression(expressionJoinOn.Body,tag:tag);
+            return ResoveExpression(expressionJoinOn.Body, tag: tag);
         }
         #endregion
 
@@ -880,7 +880,7 @@ where T3 : BaseEntity
         where T9 : BaseEntity
         where T10 : BaseEntity
         {
-            var ps = ResoveExpression(expression.Body,tag:tag);
+            var ps = ResoveExpression(expression.Body, tag: tag);
             nt.SqlParams.AddDynamicParams(ps.Params);
             nt.GroupByStr = ps.SqlStr;
             return nt;
@@ -891,7 +891,7 @@ where T3 : BaseEntity
         #region Update
         internal static List<ParamSql> ResoveUpdateExpression<T, TResult>(Expression<Func<T, TResult>> expression, string tag = null) where T : BaseEntity
         {
-            var nea = Tools.GetNEA(typeof(T),tag);
+            var nea = Tools.GetNEA(typeof(T), tag);
             if (expression.Body.NodeType == ExpressionType.MemberInit)
             {
                 var func = (MemberInitExpression)expression.Body;
@@ -900,7 +900,7 @@ where T3 : BaseEntity
                 {
                     var assignment = (MemberAssignment)item;
                     var key = assignment.Member.Name;
-                    var ps = ResoveExpression(assignment.Expression,tag:tag);
+                    var ps = ResoveExpression(assignment.Expression, tag: tag);
                     ps.SqlStr = $"{nea._Lr}{key}{nea._Rr}={ps.SqlStr}";
                     pss.Add(ps);
                 }
@@ -973,7 +973,7 @@ where T3 : BaseEntity
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
-        internal static ParamSql ResoveExpression(Expression func, bool selectAlias = false,string tag=null)
+        internal static ParamSql ResoveExpression(Expression func, bool selectAlias = false, string tag = null)
         {
             ParamSql result = new ParamSql();
             switch (func.NodeType)
@@ -1014,13 +1014,13 @@ where T3 : BaseEntity
                     result = MemberAccessExpression(func as MemberExpression, selectAlias, tag);
                     break;
                 case ExpressionType.New:
-                    result = NewExpression(func as NewExpression, selectAlias,tag);
+                    result = NewExpression(func as NewExpression, selectAlias, tag);
                     break;
                 case ExpressionType.MemberInit:
                     result = MemberInitExpression(func as MemberInitExpression, tag);
                     break;
                 case ExpressionType.Lambda:
-                    result = ResoveExpression((func as LambdaExpression).Body, tag:tag);
+                    result = ResoveExpression((func as LambdaExpression).Body, tag: tag);
                     break;
                 case ExpressionType.NewArrayInit:
                     result = NewArrayExpression(func as NewArrayExpression, tag);
@@ -1101,7 +1101,7 @@ where T3 : BaseEntity
         {
             ParamSql ps = new ParamSql();
             var result = GetOperator(func.NodeType);
-            var psr = ResoveExpression(func.Operand, tag:tag);
+            var psr = ResoveExpression(func.Operand, tag: tag);
             if (result == "Not" && psr.SqlStr.Contains("like"))
             {
                 ps.SqlStr = psr.SqlStr.Replace(" like ", " Not like ");
@@ -1117,7 +1117,7 @@ where T3 : BaseEntity
         }
 
 
-        private static ParamSql NewExpression(NewExpression func, bool selectAlias = false, string tag=null)
+        private static ParamSql NewExpression(NewExpression func, bool selectAlias = false, string tag = null)
         {
             ParamSql ps = new ParamSql();
             List<string> sqls = new List<string>();
@@ -1127,7 +1127,7 @@ where T3 : BaseEntity
                 var member = func.Members[i];
                 if (arg.NodeType == ExpressionType.MemberAccess)
                 {
-                    var pr = ResoveExpression(arg, selectAlias,tag: tag);
+                    var pr = ResoveExpression(arg, selectAlias, tag: tag);
                     ps.Params.AddDynamicParams(pr.Params);
                     if (((MemberExpression)arg).Member.Name != member.Name)
                     {
@@ -1179,7 +1179,7 @@ where T3 : BaseEntity
             foreach (var item in func.Bindings)
             {
                 var assignment = (MemberAssignment)item;
-                var sql = ResoveExpression(assignment.Expression,tag:tag);
+                var sql = ResoveExpression(assignment.Expression, tag: tag);
                 list_str.Add($"{sql.SqlStr} as '{assignment.Member.Name}'");
             }
             ps.SqlStr = string.Join(",", list_str);
@@ -1192,7 +1192,7 @@ where T3 : BaseEntity
 
             foreach (var item in func.Expressions)
             {
-                var _ps = ResoveExpression(item,tag: tag);
+                var _ps = ResoveExpression(item, tag: tag);
                 ps.SqlStr += _ps.SqlStr + ",";
                 ps.Params.AddDynamicParams(_ps.Params);
             }
@@ -1203,7 +1203,7 @@ where T3 : BaseEntity
         private static ParamSql BinaryExpression(BinaryExpression func, string tag)
         {
             ParamSql ps = new ParamSql();
-            var lps = ResoveExpression(func.Left,tag:tag);
+            var lps = ResoveExpression(func.Left, tag: tag);
             var rps = ResoveExpression(func.Right, tag: tag);
             var _operator = GetOperator(func.NodeType);
             if (rps?.SqlStr?.Trim() == "NULL")
@@ -1282,7 +1282,7 @@ where T3 : BaseEntity
             {
                 if (func.Member.DeclaringType.BaseType == typeof(BaseEntity))
                 {
-                    var nea = Tools.GetNEA(func.Expression.Type,tag);
+                    var nea = Tools.GetNEA(func.Expression.Type, tag);
                     if (selectAlias)
                     {
 
@@ -1434,7 +1434,7 @@ where T3 : BaseEntity
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
-        private static ParamSql MethodCallExpression(MethodCallExpression func,string tag=null)
+        private static ParamSql MethodCallExpression(MethodCallExpression func, string tag = null)
         {
             ParamSql ps = new ParamSql();
             string methodName = func.Method.Name;
@@ -1495,111 +1495,112 @@ where T3 : BaseEntity
 
                 default:
 
-                    if (func.Type == typeof(DateTime))
+
+                    if (func.Method.ReflectedType.FullName == "Qing.DB.Sqm")
                     {
-                        var invokeResult = Expression.Lambda<Func<DateTime>>(func).Compile().DynamicInvoke();
-                        var key = Tools.RandomCode(6, 0, true);
-                        ps.SqlStr = "@" + key;
-                        ps.Params.Add(key, invokeResult, System.Data.DbType.DateTime);
+                        switch (func.Method.Name)
+                        {
+                            case "Count":
+                                var countsql = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"COUNT({countsql.SqlStr})";
+                                break;
+                            case "Abs":
+                                var abssql = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"ABS({abssql.SqlStr})";
+                                break;
+                            case "Min":
+                                var minsql = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"MIN({minsql.SqlStr})";
+                                break;
+                            case "Max":
+                                var maxsql = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"MAX({maxsql.SqlStr})";
+                                break;
+                            case "Avg":
+                                var avgsql = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"AVG({avgsql.SqlStr})";
+                                break;
+                            case "Sum":
+                                var sumsql = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"SUM({sumsql.SqlStr})";
+                                break;
+                            case "Length":
+                                var lengthsql = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"LENGTH({lengthsql.SqlStr})";
+                                break;
+                            case "Distinct":
+                                var distinctsql = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"DISTINCT({distinctsql.SqlStr})";
+                                break;
+                            case "Concat":
+                                var concatsql = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"CONCAT({concatsql.SqlStr})";
+                                break;
+                            case "Concat_ws":
+                                var spsql = ResoveExpression(func.Arguments[0]);
+                                var concatwssql = ResoveExpression(func.Arguments[1]);
+                                ps.Params.AddDynamicParams(spsql.Params);
+                                ps.SqlStr = $"CONCAT_WS({spsql.SqlStr},{concatwssql.SqlStr})";
+                                break;
+                            case "Format":
+                                var formatsql = ResoveExpression(func.Arguments[0]);
+                                var numSql = ResoveExpression(func.Arguments[1]);
+                                ps.Params.AddDynamicParams(formatsql.Params);
+                                ps.Params.AddDynamicParams(numSql.Params);
+                                ps.SqlStr = $"FORMAT({formatsql.SqlStr},{numSql.SqlStr})";
+                                break;
+                            case "GroupConcat":
+                                var groupConcatsql = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"GROUP_CONCAT({groupConcatsql.SqlStr})";
+                                break;
+                            case "GroupConcat_ws":
+                                var groupConcatsql2 = ResoveExpression(func.Arguments[0]);
+                                var groupConcatspr = ResoveExpression(func.Arguments[1]);
+                                ps.Params.AddDynamicParams(groupConcatspr.Params);
+                                ps.SqlStr = $"GROUP_CONCAT({groupConcatsql2.SqlStr}  separator {groupConcatspr.SqlStr})";
+                                break;
+                            case "IFNULL":
+                                var arg1 = ResoveExpression(func.Arguments[0]);
+                                var arg2 = ResoveExpression(func.Arguments[1]);
+                                ps.Params.AddDynamicParams(arg2.Params);
+                                ps.SqlStr = $"IFNULL({arg1.SqlStr},{arg2.SqlStr})";
+                                break;
+                            case "In":
+                                var in_arg1 = ResoveExpression(func.Arguments[0]);
+                                var invalues = ResoveExpression(func.Arguments[1]);
+                                ps.Params.AddDynamicParams(invalues.Params);
+                                ps.SqlStr = $"{in_arg1.SqlStr} In ({invalues.SqlStr})";
+                                break;
+                            case "NotIn":
+                                var notin_arg1 = ResoveExpression(func.Arguments[0]);
+                                var notinvalues = ResoveExpression(func.Arguments[1]);
+                                ps.Params.AddDynamicParams(notinvalues.Params);
+                                ps.SqlStr = $"{notin_arg1.SqlStr} Not In ({notinvalues.SqlStr})";
+                                break;
+                            case "IsNullOrEmpty":
+                                var isNullOrEmpty_arg = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"{isNullOrEmpty_arg.SqlStr} IS NULL OR {isNullOrEmpty_arg.SqlStr} =''";
+                                break;
+                            case "IsNotNullOrEmpty":
+                                var isNotNullOrEmpty_arg = ResoveExpression(func.Arguments[0]);
+                                ps.SqlStr = $"{isNotNullOrEmpty_arg.SqlStr} IS NOT NULL AND {isNotNullOrEmpty_arg.SqlStr} <>''";
+                                break;
+                            case "TableAll":
+                                var nea = Tools.GetNEA(func.Arguments[0].Type);
+                                ps.SqlStr = $"{nea.TableName}.*";
+                                break;
+                            default:
+                                break;
+                        }
                     }
                     else
                     {
-                        if (func.Method.ReflectedType.FullName == "Qing.DB.Sqm")
+                        if (func.Type == typeof(DateTime))
                         {
-                            switch (func.Method.Name)
-                            {
-                                case "Count":
-                                    var countsql = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"COUNT({countsql.SqlStr})";
-                                    break;
-                                case "Abs":
-                                    var abssql = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"ABS({abssql.SqlStr})";
-                                    break;
-                                case "Min":
-                                    var minsql = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"MIN({minsql.SqlStr})";
-                                    break;
-                                case "Max":
-                                    var maxsql = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"MAX({maxsql.SqlStr})";
-                                    break;
-                                case "Avg":
-                                    var avgsql = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"AVG({avgsql.SqlStr})";
-                                    break;
-                                case "Sum":
-                                    var sumsql = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"SUM({sumsql.SqlStr})";
-                                    break;
-                                case "Length":
-                                    var lengthsql = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"LENGTH({lengthsql.SqlStr})";
-                                    break;
-                                case "Distinct":
-                                    var distinctsql = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"DISTINCT({distinctsql.SqlStr})";
-                                    break;
-                                case "Concat":
-                                    var concatsql = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"CONCAT({concatsql.SqlStr})";
-                                    break;
-                                case "Concat_ws":
-                                    var spsql = ResoveExpression(func.Arguments[0]);
-                                    var concatwssql = ResoveExpression(func.Arguments[1]);
-                                    ps.Params.AddDynamicParams(spsql.Params);
-                                    ps.SqlStr = $"CONCAT_WS({spsql.SqlStr},{concatwssql.SqlStr})";
-                                    break;
-                                case "Format":
-                                    var formatsql = ResoveExpression(func.Arguments[0]);
-                                    var numSql = ResoveExpression(func.Arguments[1]);
-                                    ps.Params.AddDynamicParams(formatsql.Params);
-                                    ps.Params.AddDynamicParams(numSql.Params);
-                                    ps.SqlStr = $"FORMAT({formatsql.SqlStr},{numSql.SqlStr})";
-                                    break;
-                                case "GroupConcat":
-                                    var groupConcatsql = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"GROUP_CONCAT({groupConcatsql.SqlStr})";
-                                    break;
-                                case "GroupConcat_ws":
-                                    var groupConcatsql2 = ResoveExpression(func.Arguments[0]);
-                                    var groupConcatspr = ResoveExpression(func.Arguments[1]);
-                                    ps.Params.AddDynamicParams(groupConcatspr.Params);
-                                    ps.SqlStr = $"GROUP_CONCAT({groupConcatsql2.SqlStr}  separator {groupConcatspr.SqlStr})";
-                                    break;
-                                case "IFNULL":
-                                    var arg1 = ResoveExpression(func.Arguments[0]);
-                                    var arg2 = ResoveExpression(func.Arguments[1]);
-                                    ps.Params.AddDynamicParams(arg2.Params);
-                                    ps.SqlStr = $"IFNULL({arg1.SqlStr},{arg2.SqlStr})";
-                                    break;
-                                case "In":
-                                    var in_arg1 = ResoveExpression(func.Arguments[0]);
-                                    var invalues = ResoveExpression(func.Arguments[1]);
-                                    ps.Params.AddDynamicParams(invalues.Params);
-                                    ps.SqlStr = $"{in_arg1.SqlStr} In ({invalues.SqlStr})";
-                                    break;
-                                case "NotIn":
-                                    var notin_arg1 = ResoveExpression(func.Arguments[0]);
-                                    var notinvalues = ResoveExpression(func.Arguments[1]);
-                                    ps.Params.AddDynamicParams(notinvalues.Params);
-                                    ps.SqlStr = $"{notin_arg1.SqlStr} Not In ({notinvalues.SqlStr})";
-                                    break;
-                                case "IsNullOrEmpty":
-                                    var isNullOrEmpty_arg = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"{isNullOrEmpty_arg.SqlStr} IS NULL OR {isNullOrEmpty_arg.SqlStr} =''";
-                                    break;
-                                case "IsNotNullOrEmpty":
-                                    var isNotNullOrEmpty_arg = ResoveExpression(func.Arguments[0]);
-                                    ps.SqlStr = $"{isNotNullOrEmpty_arg.SqlStr} IS NOT NULL AND {isNotNullOrEmpty_arg.SqlStr} <>''";
-                                    break;
-                                case "TableAll":
-                                    var nea = Tools.GetNEA(func.Arguments[0].Type);
-                                    ps.SqlStr = $"{nea.TableName}.*";
-                                    break;
-                                default:
-                                    break;
-                            }
+                            var invokeResult = Expression.Lambda<Func<DateTime>>(func).Compile().DynamicInvoke();
+                            var key = Tools.RandomCode(6, 0, true);
+                            ps.SqlStr = "@" + key;
+                            ps.Params.Add(key, invokeResult, System.Data.DbType.DateTime);
                         }
                         else
                         {
@@ -1629,6 +1630,7 @@ where T3 : BaseEntity
                                 ps.Params.Add(key, result);
                             }
                         }
+
                     }
 
                     break;

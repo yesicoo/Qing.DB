@@ -10,9 +10,9 @@ namespace Qing.DB
 {
     public static class Sqm
     {
-        public static double Abs(object f)
+        public static T Abs<T>(T f)
         {
-            return 0;
+            return default(T);
         }
         public static int Count(object f)
         {
@@ -23,21 +23,21 @@ namespace Qing.DB
             return null;
         }
 
-        public static double Min(object f)
+        public static T Min<T>(T f)
         {
-            return 0;
+            return default(T);
         }
-        public static double Max(object f)
+        public static T Max<T>(T f)
         {
-            return 0;
+            return default(T);
         }
-        public static double Avg(object f)
+        public static T Avg<T>(T f)
         {
-            return 0;
+            return default(T);
         }
-        public static double Sum(object f)
+        public static T Sum<T>(T f)
         {
-            return 0;
+            return default(T);
         }
         public static int Length(object f)
         {
