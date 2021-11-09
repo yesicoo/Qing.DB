@@ -41,9 +41,9 @@ namespace Qing.DB
         {
             get { return DBFactory.Instance.DefaultDBID(); }
         }
-        private List<T> Load(string dbID = "")
+        private List<T> Load(string dbid = null)
         {
-            using (DBContext context = new DBContext(dbID))
+            using (DBContext context = new DBContext(dbid))
             {
 
                 List<T> tResult = null;
@@ -68,7 +68,7 @@ namespace Qing.DB
                 tResult = query.QueryAll().ToList();
 
 
-                string dbkey = string.IsNullOrEmpty(dbID) ? defaultDB : dbID;
+                string dbkey = string.IsNullOrEmpty(dbid) ? defaultDB : dbid;
                 var timeKey = new TimeKey() { Key = dbkey, LastTime = DateTime.Now };
                 _dts.AddOrUpdate(timeKey, tResult, (oldkey, oldvalue) => tResult);
                 SqlLogUtil.SendLog(LogType.Msg, $"加载 {timeKey.Key}[{timeKey.LastTime}]({nea.TableName})临时缓存({_timeOut}min) 共{tResult.Count}条");
@@ -118,16 +118,16 @@ namespace Qing.DB
             _orderDesc = desc;
             StartTimer();
         }
-        public List<T> QueryAll(string dbID = "")
+        public List<T> QueryAll(string dbid = null)
         {
             List<T> ts = null;
-            string dbkey = string.IsNullOrEmpty(dbID) ? defaultDB : dbID;
+            string dbkey = string.IsNullOrEmpty(dbid) ? defaultDB : dbid;
             var timeKey = _dts.Keys.FirstOrDefault(x => x.Key == dbkey);
             if (timeKey != null)
             {
                 if (!_dts.TryGetValue(timeKey, out ts))
                 {
-                    ts = Load(dbID);
+                    ts = Load(dbid);
                 }
                 else
                 {
@@ -136,18 +136,18 @@ namespace Qing.DB
             }
             else
             {
-                ts = Load(dbID);
+                ts = Load(dbid);
             }
             return ts;
         }
-        public List<T> Query(Expression<Func<T, bool>> expression, string dbID = "")
+        public List<T> Query(Expression<Func<T, bool>> expression, string dbid = null)
         {
-            return QueryAll(dbID).Where(expression.Compile()).ToList();
+            return QueryAll(dbid).Where(expression.Compile()).ToList();
         }
 
-        public T QueryFirst(Expression<Func<T, bool>> expression = null, Expression<Func<T, object>> orderyExpression = null, bool orderByDesc = false, string dbID = "")
+        public T QueryFirst(Expression<Func<T, bool>> expression = null, Expression<Func<T, object>> orderyExpression = null, bool orderByDesc = false, string dbid = null)
         {
-            var query = QueryAll(dbID) as IEnumerable<T>;
+            var query = QueryAll(dbid) as IEnumerable<T>;
             if (expression != null)
             {
                 query = query.Where(expression.Compile());
@@ -166,10 +166,10 @@ namespace Qing.DB
             }
             return query.FirstOrDefault();
         }
-        public PageResult<T> QueryPages(int pageNum, int pageSize, Expression<Func<T, bool>> expression = null, Expression<Func<T, object>> orderyExpression = null, bool orderByDesc = false, string dbID = "")
+        public PageResult<T> QueryPages(int pageNum, int pageSize, Expression<Func<T, bool>> expression = null, Expression<Func<T, object>> orderyExpression = null, bool orderByDesc = false, string dbid = null)
         {
             PageResult<T> pageResult = new PageResult<T>();
-            var ds = QueryAll(dbID);
+            var ds = QueryAll(dbid);
 
             pageResult.CurrentPageNum = pageNum;
             pageResult.CurrentPageSize = pageSize;
@@ -197,10 +197,10 @@ namespace Qing.DB
 
 
 
-        public bool Add(T t, string dbID = "")
+        public bool Add(T t, string dbid = null)
         {
-            var ds = QueryAll(dbID);
-            using (DBContext context = new DBContext(dbID))
+            var ds = QueryAll(dbid);
+            using (DBContext context = new DBContext(dbid))
             {
                 int result = context.Create(t);
                 if (result > 0)
@@ -226,16 +226,16 @@ namespace Qing.DB
 
             }
         }
-        public bool AddRange(IEnumerable<T> ts, string dbID = "")
+        public bool AddRange(IEnumerable<T> ts, string dbid = null)
         {
-            var ds = QueryAll(dbID);
-            using (DBContext context = new DBContext(dbID))
+            var ds = QueryAll(dbid);
+            using (DBContext context = new DBContext(dbid))
             {
                 if (!string.IsNullOrEmpty(nea.Auto_Increment))
                 {
                     foreach (var t in ts)
                     {
-                        if (!Add(t, dbID))
+                        if (!Add(t, dbid))
                         {
                             return false;
                         }
@@ -261,23 +261,23 @@ namespace Qing.DB
             }
         }
 
-        public List<T> ReLoad(string dbID = "")
+        public List<T> ReLoad(string dbid = null)
         {
-            string dbkey = string.IsNullOrEmpty(dbID) ? defaultDB : dbID;
+            string dbkey = string.IsNullOrEmpty(dbid) ? defaultDB : dbid;
             var timeKey = _dts.Keys.FirstOrDefault(x => x.Key == dbkey);
             if (timeKey != null)
             {
                 _dts.TryRemove(timeKey, out var removeData);
             }
-            return QueryAll(dbID);
+            return QueryAll(dbid);
 
         }
 
 
 
-        public bool RefreshItem(T t, string dbID = "")
+        public bool RefreshItem(T t, string dbid = null)
         {
-            var ds = QueryAll(dbID);
+            var ds = QueryAll(dbid);
             lock (ds)
             {
                 //这地方可能有隐患
@@ -289,27 +289,27 @@ namespace Qing.DB
             }
         }
 
-        public bool RefreshItems(Expression<Func<T, bool>> expression, string dbID = "")
+        public bool RefreshItems(Expression<Func<T, bool>> expression, string dbid = null)
         {
-            var ds = QueryAll(dbID);
+            var ds = QueryAll(dbid);
             lock (ds)
             {
                 ds.RemoveAll(x => expression.Compile().Invoke(x));
-                ds.AddRange(ExpressionCheck(EntityFactory<T>.Query(expression, dbID).ToArray()));
+                ds.AddRange(ExpressionCheck(EntityFactory<T>.Query(expression, dbid).ToArray()));
                 ds.DoSort(_orderyExpression, _orderDesc);
                 return true;
             }
         }
 
-        public int Remove(T t, string dbID = "")
+        public int Remove(T t, string dbid = null)
         {
-            var ds = QueryAll(dbID);
+            var ds = QueryAll(dbid);
             lock (ds)
             {
                 //这地方可能有隐患
 
-                var sqlp = t.GetDelByPrimaryKey_SQL(string.IsNullOrEmpty(dbID) ? defaultDB : dbID);
-                if (DBFactory.Instance.Execute(dbID, sqlp.SqlStr, sqlp.Params) > 0)
+                var sqlp = t.GetDelByPrimaryKey_SQL(string.IsNullOrEmpty(dbid) ? defaultDB : dbid);
+                if (DBFactory.Instance.Execute(dbid, sqlp.SqlStr, sqlp.Params) > 0)
                 {
                     ds.Remove(t);
                     return 1;
@@ -321,14 +321,14 @@ namespace Qing.DB
             }
         }
 
-        public int Remove(Expression<Func<T, bool>> expression, string dbID = "")
+        public int Remove(Expression<Func<T, bool>> expression, string dbid = null)
         {
-            var ds = QueryAll(dbID);
+            var ds = QueryAll(dbid);
             lock (ds)
             {
                 var delds = ds.Where(expression.Compile());
 
-                using (DBContext context = new DBContext(dbID))
+                using (DBContext context = new DBContext(dbid))
                 {
                     if (context.Delete(expression) > 0)
                     {
@@ -343,13 +343,13 @@ namespace Qing.DB
             }
         }
 
-        public int Update(Expression<Func<T, T>> expressionNew, Expression<Func<T, bool>> expressionWhere, string dbID = "")
+        public int Update(Expression<Func<T, T>> expressionNew, Expression<Func<T, bool>> expressionWhere, string dbid = null)
         {
 
-            var ds = QueryAll(dbID);
+            var ds = QueryAll(dbid);
             lock (ds)
             {
-                using (DBContext context = new DBContext(dbID))
+                using (DBContext context = new DBContext(dbid))
                 {
                     if (context.Update(expressionNew, expressionWhere) > 0)
                     {

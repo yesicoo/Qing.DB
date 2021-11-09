@@ -195,7 +195,7 @@ namespace Qing.DB
                 return $"as '{alias}'";
             }
         }
-
+        [Obsolete]
         internal static string AppendTableSuffix(QingEntityAttribute nea, string sql, string tableSuffix)
         {
             string tasbSuffixStr = string.Empty;
@@ -219,6 +219,7 @@ namespace Qing.DB
                 }
                 else if (tableSuffix.Contains("[WEEK]"))
                 {
+                    //周一为记录时间
                     DateTime dt = DateTime.Today;
                     int count = dt.DayOfWeek - DayOfWeek.Monday;
                     if (count == -1) count = 6;
@@ -228,6 +229,7 @@ namespace Qing.DB
                 }
                 else if (tableSuffix.Contains("[WEEK7]"))
                 {
+                    //周日为记录时间
                     string res = "";
                     DateTime dt = DateTime.Today;
                     if (dt.DayOfWeek == DayOfWeek.Sunday)

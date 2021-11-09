@@ -32,7 +32,7 @@ namespace Qing.DB
 
         internal string DBType { get; set; }
         public bool AutoCreateTable { get; set; } = false;
-        public int BatchCreateSplitCount { get; set; } = 1;
+        public int BatchCreateSplitCount { get; set; } = 1000;
 
         /// <summary>
         /// 连接空闲时间（之后被清理）
@@ -80,15 +80,24 @@ namespace Qing.DB
         {
             return defaultDBID;
         }
+        public string GetConnStr(string tag)
+        {
+            var info = DBConnPools.GetConnInfo(tag);
+            return info?.DBConnStr;
+        }
+        public string GetConnStr()
+        {
+            return GetConnStr("Default");
+        }
 
         /// <summary>
         /// 获取链接对象
         /// </summary>
-        /// <param name="dbID"></param>
+        /// <param name="dbid"></param>
         /// <returns></returns>
-        public DBConnectionItem GetDBConnectionItem(string dbID = null, string tag = null)
+        public DBConnectionItem GetDBConnectionItem(string dbid = null, string tag = null)
         {
-            return DBConnPools.GetConnectionByDBID(dbID, tag);
+            return DBConnPools.GetConnectionByDBID(dbid, tag);
         }
         /// <summary>
         /// 创建一个新的连接

@@ -19,44 +19,44 @@ namespace Qing.DB.Interfaces
         /// <summary>
         /// 重新载入
         /// </summary>
-        /// <param name="dbID"></param>
+        /// <param name="dbid"></param>
         /// <returns></returns>
-        List<T> ReLoad(string dbID = "");
+        List<T> ReLoad(string dbid = null);
         /// <summary>
         /// 条件查询
         /// </summary>
         /// <param name="expression"></param>
-        /// <param name="dbID"></param>
+        /// <param name="dbid"></param>
         /// <returns></returns>
-        List<T> Query(Expression<Func<T, bool>> expression, string dbID = "");
+        List<T> Query(Expression<Func<T, bool>> expression, string dbid = null);
         /// <summary>
         /// 条件排序查询第一个
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="orderyExpression"></param>
         /// <param name="orderByDesc"></param>
-        /// <param name="dbID"></param>
+        /// <param name="dbid"></param>
         /// <returns></returns>
-        T QueryFirst(Expression<Func<T, bool>> expression=null, Expression<Func<T, object>> orderyExpression = null, bool orderByDesc = false, string dbID = "");
+        T QueryFirst(Expression<Func<T, bool>> expression=null, Expression<Func<T, object>> orderyExpression = null, bool orderByDesc = false, string dbid = null);
         /// <summary>
         /// 查询所有
         /// </summary>
-        /// <param name="dbID"></param>
+        /// <param name="dbid"></param>
         /// <returns></returns>
-        List<T> QueryAll(string dbID = "");
+        List<T> QueryAll(string dbid = null);
 
-        PageResult<T> QueryPages(int pageNum, int pageSize, Expression<Func<T, bool>> expression=null, Expression<Func<T, object>> orderyExpression = null, bool orderByDesc = false, string dbID = "");
+        PageResult<T> QueryPages(int pageNum, int pageSize, Expression<Func<T, bool>> expression=null, Expression<Func<T, object>> orderyExpression = null, bool orderByDesc = false, string dbid = null);
 
 
-        bool Add(T t, string dbID = "");
-        bool AddRange(IEnumerable<T> ts, string dbID = "");
+        bool Add(T t, string dbid = null);
+        bool AddRange(IEnumerable<T> ts, string dbid = null);
 
-        int Remove(T t, string dbID = "");
-        int Remove(Expression<Func<T, bool>> expression, string dbID = "");
+        int Remove(T t, string dbid = null);
+        int Remove(Expression<Func<T, bool>> expression, string dbid = null);
 
-        int Update(Expression<Func<T, T>> expressionNew, Expression<Func<T, bool>> expressionWhere, string dbID = "");
+        int Update(Expression<Func<T, T>> expressionNew, Expression<Func<T, bool>> expressionWhere, string dbid = null);
 
-        bool RefreshItems(Expression<Func<T, bool>> expression, string dbID = "");
-        bool RefreshItem(T t, string dbID = "");
+        bool RefreshItems(Expression<Func<T, bool>> expression, string dbid = null);
+        bool RefreshItem(T t, string dbid = null);
     }
 }

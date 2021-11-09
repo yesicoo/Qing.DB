@@ -28,6 +28,25 @@ namespace Qing.DB
                 }
             }
         }
+        public string TableSuffixName(string tableSuffix)
+        {
+            if (tableSuffix != null)
+            {
+                if (_dbType == "MsSql")
+                {
+                    return $"[dbo].[{Tools.ConvertSuffixTableName(_tableName, tableSuffix, _dbType)}]";
+                }
+                else
+                {
+                    return $"`{Tools.ConvertSuffixTableName(_tableName, tableSuffix, _dbType)}`";
+                }
+            }
+            else
+            {
+                return TableName;
+            }
+            
+        }
         public string PrimaryKey { set; get; }
 
         public string Auto_Increment { set; get; }

@@ -47,6 +47,18 @@ namespace Qing.DB
             var dbConnInfo = tag == null ? _DBConnItems.First().Value : _DBConnItems.TryGetValue(tag);
             return dbConnInfo?.DefaultDBName;
         }
+        public static DBConnInfo GetConnInfo(string tag)
+        {
+
+            if (_DBConnItems.TryGetValue(tag, out var value))
+            {
+                return value;
+            }
+            else
+            {
+                return null;
+            }
+        }
         internal static string DBType(string tag = null)
         {
             var dbConnInfo = tag == null ? _DBConnItems.First().Value : _DBConnItems.TryGetValue(tag);

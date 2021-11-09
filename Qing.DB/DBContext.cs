@@ -17,7 +17,7 @@ namespace Qing.DB
         DBConnectionItem connectionItem;
         DbTransaction dbTransaction;
         string DBName = string.Empty;
-        string Tag = string.Empty;
+       public string Tag = string.Empty;
         public string CurrentDB
         {
             get
@@ -222,7 +222,7 @@ namespace Qing.DB
                 {
                     throw (ex);
                 }
-                if (ex.InnerException.Message.StartsWith("对象名") && ex.InnerException.Message.EndsWith("无效。"))
+                if ((ex.InnerException.Message.StartsWith("对象名") && ex.InnerException.Message.EndsWith("无效。")) || ex.InnerException.Message.StartsWith("Invalid object name"))
                 {
                     TableWatcher.CreateTable<T>(DBName, tableSuffix,tag:Tag);
                     sqlResult = connectionItem.Execute(ps.SqlStr, ps.Params);
@@ -235,7 +235,7 @@ namespace Qing.DB
             }
 
 
-            var ab = t.GetNEA();
+            var ab = t.GetNEA(Tag);
             if (!string.IsNullOrEmpty(ab.Auto_Increment))
             {
                 return connectionItem.GetLastIdentity();// connectionItem.ExecuteScalar<int>("SELECT LAST_INSERT_ID();");
@@ -293,7 +293,7 @@ namespace Qing.DB
                         {
                             throw (ex);
                         }
-                        if (ex.InnerException.Message.StartsWith("对象名") && ex.InnerException.Message.EndsWith("无效。"))
+                        if ((ex.InnerException.Message.StartsWith("对象名") && ex.InnerException.Message.EndsWith("无效。")) || ex.InnerException.Message.StartsWith("Invalid object name"))
                         {
                             TableWatcher.CreateTable<T>(DBName,tableSuffix, ignoreInc, Tag);
                             return connectionItem.Execute(ps.SqlStr, ps.Params);
@@ -659,6 +659,21 @@ namespace Qing.DB
                 connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
             }
             return connectionItem.ExecuteReaderAsync(sql);
+        }
+        public bool CheckTableExist<T>(string tableSuffix = null)
+        {
+            var nea = Tools.GetNEA(typeof(T), Tag);
+            var tableName = Tools.ConvertSuffixTableName(nea._tableName, tableSuffix, nea._dbType);
+            if (nea._dbType == "MsSql")
+            {
+                string sql = $"if object_id('{tableName}') is not null print 1 else  print 0";
+                return ExecuteScalar<int>(sql) == 1;
+            }
+            else
+            {
+                string sql = $"SELECT COUNT(*) FROM information_schema.TABLES WHERE table_name ='{tableName}';";
+                return ExecuteScalar<int>(sql) == 1;
+            }
         }
 
         public void Dispose()

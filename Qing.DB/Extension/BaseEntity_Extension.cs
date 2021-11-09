@@ -25,10 +25,10 @@ namespace Qing.DB
         /// <returns></returns>
 
 
-        internal static ParamSql GetAll_SQL<T>(this T t, string DBID) where T : BaseEntity
+        internal static ParamSql GetAll_SQL<T>(this T t, string DBID, string tableSuffix = null, string tag=null) where T : BaseEntity
         {
-            var nea = t.GetNEA();
-            return new ParamSql($" select {t.GetBaseFieldsStr()} from {nea.ToSqlDBName(DBID)}.{nea.TableName} ");
+            var nea = t.GetNEA(tag);
+            return new ParamSql($" select {t.GetBaseFieldsStr()} from {nea.ToSqlDBName(DBID)}.{ nea.TableSuffixName(tableSuffix)} ");
         }
 
         #region GetAll_SQL
@@ -42,11 +42,11 @@ namespace Qing.DB
         /// <param name="orderBy"></param>
         /// <param name="IsDesc"></param>
         /// <returns></returns>
-        internal static ParamSql GetAll_SQL<T>(this T t, string DBID, string orderBy, bool IsDesc = false) where T : BaseEntity
+        internal static ParamSql GetAll_SQL<T>(this T t, string DBID, string orderBy, bool IsDesc = false, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             ParamSql ps = new ParamSql();
-            var nea = t.GetNEA();
-            StringBuilder sb_ob = new StringBuilder($" select {t.GetBaseFieldsStr()} from {nea.ToSqlDBName(DBID)}.{nea.TableName} ");
+            var nea = t.GetNEA(tag);
+            StringBuilder sb_ob = new StringBuilder($" select {t.GetBaseFieldsStr()} from {nea.ToSqlDBName(DBID)}.{nea.TableSuffixName(tableSuffix)} ");
             if (!string.IsNullOrEmpty(orderBy))
             {
                 sb_ob.Append($" Order By @OrderBy");
@@ -60,56 +60,6 @@ namespace Qing.DB
             return ps;
         }
         #endregion
-
-        /// <summary>
-        /// 根据主键查询
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="t"></param>
-        /// <param name="PrimaryValue"></param>
-        /// <returns></returns>
-        internal static ParamSql GetByPrimaryKey_SQL<T>(this T t, string DBID, params object[] PrimaryValue) where T : BaseEntity
-        {
-            ParamSql ps = new ParamSql();
-            var nea = t.GetNEA();
-
-            var pkvs = nea.PrimaryKey.Split(',').ToList();
-            if (pkvs != null && pkvs.Count > 0)
-            {
-                string whereStr = string.Empty;
-                if (pkvs.Count != PrimaryValue.Length)
-                {
-                    SqlLogUtil.SendLog(LogType.Error, "主键数量不匹配");
-                    return null;
-
-                }
-                else
-                {
-                    for (int i = 0; i < pkvs.Count; i++)
-                    {
-                        whereStr += $" and {pkvs[i]} = @{pkvs[i]}";
-                        ps.Params.Add(pkvs[i], PrimaryValue[i]);
-                    }
-                    if (!string.IsNullOrEmpty(whereStr))
-                    {
-                        ps.SqlStr = $"select * from {nea.ToSqlDBName(DBID)}.{nea.TableName} where 1=1 {whereStr};";
-                        return ps;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-
-
-
 
 
         /// <summary>
@@ -161,11 +111,11 @@ namespace Qing.DB
         #endregion
 
         #region 删除
-        internal static ParamSql GetDelByPrimaryKey_SQL<T>(this T t, string DBID) where T : BaseEntity
+        internal static ParamSql GetDelByPrimaryKey_SQL<T>(this T t, string DBID,string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             ParamSql ps = new ParamSql();
             if (t == null) { return null; }
-            var nea = t.GetNEA();
+            var nea = t.GetNEA(tag);
             var pkvs = GetPrimaryKey(t);
             if (pkvs != null && pkvs.Keys.Count > 0)
             {
@@ -177,7 +127,7 @@ namespace Qing.DB
                 }
                 if (!string.IsNullOrEmpty(whereStr))
                 {
-                    ps.SqlStr = $"delete from {nea.ToSqlDBName(DBID)}.{nea.TableName} where 1=1 {whereStr};";
+                    ps.SqlStr = $"delete from {nea.ToSqlDBName(DBID)}.{nea.TableSuffixName(tableSuffix)} where 1=1 {whereStr};";
                     return ps;
                 }
                 else
@@ -190,9 +140,9 @@ namespace Qing.DB
                 return null;
             }
         }
-        internal static string GetDelByPrimaryKey_SQL<T>(this List<T> ents, string DBID) where T : BaseEntity
+        internal static string GetDelByPrimaryKey_SQL<T>(this List<T> ents, string DBID, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
-            var nea = ents.First().GetNEA();
+            var nea = ents.First().GetNEA(tableSuffix);
             var pkvs = GetPrimaryKey(ents);
             if (pkvs != null && pkvs.Keys.Count > 0)
             {
@@ -203,7 +153,7 @@ namespace Qing.DB
                 }
                 if (!string.IsNullOrEmpty(whereStr))
                 {
-                    String sql = $"delete from {nea.ToSqlDBName(DBID)}.{nea.TableName} where 1=1 {whereStr};";
+                    String sql = $"delete from {nea.ToSqlDBName(DBID)}.{nea.TableSuffixName(tableSuffix)} where 1=1 {whereStr};";
                     return sql;
                 }
                 else
@@ -225,15 +175,14 @@ namespace Qing.DB
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="t"></param>
-        /// <param name="dbID"></param>
+        /// <param name="dbid"></param>
         /// <param name="ignoreInc">忽略自增字段</param>
         /// <returns></returns>
-        internal static ParamSql GetInsert_Sql<T>(this T t, string dbID, string tableSuffix = null,bool ignoreInc = false,string tag=null) where T : BaseEntity
+        internal static ParamSql GetInsert_Sql<T>(this T t, string dbid, string tableSuffix = null,bool ignoreInc = false,string tag=null) where T : BaseEntity
         {
             ParamSql ps = new ParamSql();
             if (t == null) { return null; }
-            var nea = t.GetNEA();
-            var primaryKeys = nea.PrimaryKey.Split(',').ToList();
+            var nea = t.GetNEA(tag);
             List<string> Auto_Increments = null;
             if (!string.IsNullOrEmpty(nea.Auto_Increment))
             {
@@ -282,11 +231,8 @@ namespace Qing.DB
                     }
                 }
             }
-            string sql= string.Format(InsertSQL, (nea.ToSqlDBName(dbID) + "." + nea.TableName), sb_Columns.ToString().TrimEnd(','), sb_Values.ToString().TrimEnd(','));
-            if (!string.IsNullOrEmpty(tableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, tableSuffix);
-            }
+            string sql= string.Format(InsertSQL, (nea.ToSqlDBName(dbid) + "." + nea.TableSuffixName(tableSuffix)), sb_Columns.ToString().TrimEnd(','), sb_Values.ToString().TrimEnd(','));
+          
             ps.SqlStr = sql;
             return ps;
         }
@@ -307,8 +253,7 @@ namespace Qing.DB
             }
             List<string> excludeColumns = new List<string>();
             var _t = ts.FirstOrDefault();
-            var nea = _t.GetNEA();
-            var primaryKeys = nea.PrimaryKey.Split(',').ToList();
+            var nea = _t.GetNEA(tag);
             var Auto_Increments = nea.Auto_Increment.Split(',').ToList();
             PropertyInfo[] pros = _t.GetType().GetProperties();
             StringBuilder sb_Columns = new StringBuilder();
@@ -324,7 +269,7 @@ namespace Qing.DB
                 }
             }
 
-            StringBuilder sb_SQL = new StringBuilder($"Insert into {nea.ToSqlDBName(DBID)}.{nea.TableName} ({ sb_Columns.ToString().TrimEnd(',')}) values ");
+            StringBuilder sb_SQL = new StringBuilder($"Insert into {nea.ToSqlDBName(DBID)}.{nea.TableSuffixName(tableSuffix)} ({ sb_Columns.ToString().TrimEnd(',')}) values ");
 
 
             for (int i = 0; i < ts.Count(); i++)
@@ -368,10 +313,6 @@ namespace Qing.DB
             }
 
             string sql=sb_SQL.ToString().TrimEnd(',') + ";";
-            if (!string.IsNullOrEmpty(tableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, tableSuffix);
-            }
             ps.SqlStr = sql;
             return ps;
         }
@@ -379,16 +320,16 @@ namespace Qing.DB
         #endregion
 
         #region 更改
-        internal static ParamSql GetUpdateByPrimaryKey_Sql<T>(this T t, string DBID, string tableSuffix = null) where T : BaseEntity
+        internal static ParamSql GetUpdateByPrimaryKey_Sql<T>(this T t, string DBID, string tableSuffix = null,string tag=null) where T : BaseEntity
         {
             ParamSql ps = new ParamSql();
             if (t == null) { return null; }
             Dictionary<string, string> Primarys = new Dictionary<string, string>();
             List<string> excludeColumns = new List<string>();
-            var nea = t.GetNEA();
+            var nea = t.GetNEA(tag);
             var primaryKeys = nea.PrimaryKey.Split(',').ToList();
             PropertyInfo[] pros = t.GetType().GetProperties();
-            StringBuilder sb_SQL = new StringBuilder($"Update {nea.ToSqlDBName(DBID)},{nea.TableName} set ");
+            StringBuilder sb_SQL = new StringBuilder($"Update {nea.ToSqlDBName(DBID)},{nea.TableSuffixName(tableSuffix)} set ");
             foreach (var item in pros)
             {
                 if (item.CanRead && item.CanWrite)
@@ -430,21 +371,17 @@ namespace Qing.DB
                 ps.Params.Add(item.Key + "_PK", item.Value);
             }
             string sql = sb_SQL.ToString().TrimEnd(',') + whereStr.ToString() + ";";
-            if (!string.IsNullOrEmpty(tableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, tableSuffix);
-            }
             ps.SqlStr = sql;
             return ps;
 
         }
 
-        internal static ParamSql GetUpdateByPrimaryKey_Sql<T>(this List<T> ents, string DBID,string tableSuffix=null) where T : BaseEntity
+        internal static ParamSql GetUpdateByPrimaryKey_Sql<T>(this List<T> ents, string DBID,string tableSuffix=null,string tag=null) where T : BaseEntity
         {
             ParamSql ps = new ParamSql();
             if (ents == null || ents.Count == 0) { return null; }
             Dictionary<string, string> Primarys = new Dictionary<string, string>();
-            var nea = ents.First().GetNEA();
+            var nea = ents.First().GetNEA(tag);
             var primaryKeys = nea.PrimaryKey.Split(',').ToList();
             PropertyInfo[] pros = nea.GetType().GetProperties();
             StringBuilder sb_lang_sql = new StringBuilder();
@@ -452,7 +389,7 @@ namespace Qing.DB
             {
                 var ent = ents[i];
 
-                StringBuilder sb_SQL = new StringBuilder($"Update {nea.ToSqlDBName(DBID)}.{nea.TableName} set ");
+                StringBuilder sb_SQL = new StringBuilder($"Update {nea.ToSqlDBName(DBID)}.{nea.TableSuffixName(tableSuffix)} set ");
                 foreach (var item in pros)
                 {
                     if (item.CanRead && item.CanWrite)
@@ -494,25 +431,21 @@ namespace Qing.DB
                 sb_lang_sql.Append(sb_SQL.ToString().TrimEnd(',') + whereStr.ToString() + ";");
             }
             string sql = sb_lang_sql.ToString();
-            if (!string.IsNullOrEmpty(tableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, tableSuffix);
-            }
             ps.SqlStr = sql;
             return ps;
 
         }
 
-        internal static ParamSql GetUpdateFieldsByPrimaryKey_Sql<T>(this T t, string DBID, string[] fields,string tableSuffix=null) where T : BaseEntity
+        internal static ParamSql GetUpdateFieldsByPrimaryKey_Sql<T>(this T t, string DBID, string[] fields,string tableSuffix=null,string tag=null) where T : BaseEntity
         {
             ParamSql ps = new ParamSql();
             if (t == null) { return null; }
             Dictionary<string, string> Primarys = new Dictionary<string, string>();
             List<string> excludeColumns = new List<string>();
-            var nea = t.GetNEA();
+            var nea = t.GetNEA(tag);
             var primaryKeys = nea.PrimaryKey.Split(',').ToList();
             PropertyInfo[] pros = t.GetType().GetProperties();
-            StringBuilder sb_SQL = new StringBuilder($"Update {nea.ToSqlDBName(DBID)}.{nea.TableName} set ");
+            StringBuilder sb_SQL = new StringBuilder($"Update {nea.ToSqlDBName(DBID)}.{nea.TableSuffixName(tableSuffix)} set ");
             foreach (var item in pros)
             {
                 if (item.CanRead && item.CanWrite)
@@ -561,20 +494,16 @@ namespace Qing.DB
                 ps.Params.Add(item.Key + "_PK", item.Value);
             }
             string sql = sb_SQL.ToString().TrimEnd(',') + whereStr.ToString() + ";";
-            if (!string.IsNullOrEmpty(tableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, tableSuffix);
-            }
             ps.SqlStr = sql;
             return ps;
         }
 
-        internal static ParamSql GetUpdateFieldsByPrimaryKey_Sql<T>(this List<T> ents, string DBID, string[] fields,string tableSuffix=null) where T : BaseEntity
+        internal static ParamSql GetUpdateFieldsByPrimaryKey_Sql<T>(this List<T> ents, string DBID, string[] fields,string tableSuffix=null,string tag=null) where T : BaseEntity
         {
             ParamSql ps = new ParamSql();
             if (ents == null || ents.Count == 0) { return null; }
             Dictionary<string, string> Primarys = new Dictionary<string, string>();
-            var nea = ents.First().GetNEA();
+            var nea = ents.First().GetNEA(tag);
             var primaryKeys = nea.PrimaryKey.Split(',').ToList();
             PropertyInfo[] pros = nea.GetType().GetProperties();
             StringBuilder sb_lang_sql = new StringBuilder();
@@ -583,7 +512,7 @@ namespace Qing.DB
                 var ent = ents[i];
 
 
-                StringBuilder sb_SQL = new StringBuilder($"Update {nea.ToSqlDBName(DBID)}.{nea.TableName} set ");
+                StringBuilder sb_SQL = new StringBuilder($"Update {nea.ToSqlDBName(DBID)}.{nea.TableSuffixName(tableSuffix)} set ");
                 foreach (var item in pros)
                 {
                     if (item.CanRead && item.CanWrite)
@@ -631,10 +560,7 @@ namespace Qing.DB
                 sb_lang_sql.AppendFormat("{0},{1};", sb_SQL.ToString().TrimEnd(','), whereStr.ToString());
             }
             string sql = sb_lang_sql.ToString();
-            if (!string.IsNullOrEmpty(tableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, tableSuffix);
-            }
+         
             ps.SqlStr = sql;
             return ps;
         }
@@ -700,25 +626,25 @@ namespace Qing.DB
         /// <summary>
         /// 新增
         /// </summary>
-        /// <param name="dbID"></param>
+        /// <param name="dbid"></param>
         /// <param name="ent"></param>
         /// <returns></returns>
-        internal static int Insert<T>(this T t, string dbid = "", string tableSuffix = null,bool ignoreInc = false) where T : BaseEntity
+        internal static int Insert<T>(this T t, string dbid = null, string tableSuffix = null,bool ignoreInc = false, string tag = null) where T : BaseEntity
         {
             if (t == null)
                 return -1;
 
-            using (DBContext context = new DBContext(dbid))
+            using (DBContext context = new DBContext(dbid,tag))
             {
                 return context.Create(t, tableSuffix, ignoreInc);
             }
         }
 
-        internal static Task<int> InsertAsync<T>(this T t, string dbid = "", string tableSuffix = null,bool ignoreInc = false) where T : BaseEntity
+        internal static Task<int> InsertAsync<T>(this T t, string dbid = null, string tableSuffix = null,bool ignoreInc = false, string tag = null) where T : BaseEntity
         {
             if (t == null)
                 return Task.FromResult(-1);
-            using (DBContext context = new DBContext(dbid))
+            using (DBContext context = new DBContext(dbid,tag))
             {
                 return context.CreateAsync(t, tableSuffix, ignoreInc);
             }
@@ -747,28 +673,28 @@ namespace Qing.DB
         /// <summary>
         /// 批量新增
         /// </summary>
-        /// <param name="dbID"></param>
+        /// <param name="dbid"></param>
         /// <param name="ents"></param>
         /// <returns></returns>
-        internal static int BulkInsert<T>(this List<T> ents, string dbid = "", string tableSuffix = null,bool ignoreInc = false) where T : BaseEntity
+        internal static int BulkInsert<T>(this List<T> ents, string dbid = null, string tableSuffix = null,bool ignoreInc = false, string tag = null) where T : BaseEntity
         {
             if (ents == null || ents.Count() == 0)
                 return -1;
 
 
-            using (DBContext context = new DBContext(dbid))
+            using (DBContext context = new DBContext(dbid,tag))
             {
                 return context.BatchCreate(ents, tableSuffix, ignoreInc);
             }
 
         }
 
-        internal static Task<int> BulkInsertAsync<T>(this List<T> ents, string dbid = "", string tableSuffix = null,bool ignoreInc = false) where T : BaseEntity
+        internal static Task<int> BulkInsertAsync<T>(this List<T> ents, string dbid = null, string tableSuffix = null,bool ignoreInc = false, string tag = null) where T : BaseEntity
         {
             if (ents == null || ents.Count() == 0)
                 return Task.FromResult(-1);
 
-            using (DBContext context = new DBContext(dbid))
+            using (DBContext context = new DBContext(dbid,tag))
             {
                 return context.BatchCreateAsync(ents, tableSuffix, ignoreInc);
             }
@@ -797,17 +723,17 @@ namespace Qing.DB
         /// <summary>
         /// 主键删除
         /// </summary>
-        /// <param name="dbID"></param>
+        /// <param name="dbid"></param>
         /// <param name="condition"></param>
         /// <returns></returns>
-        public static int RemoveByPrimaryKeys<T>(this T ent, string dbid = "") where T : BaseEntity
+        public static int RemoveByPrimaryKeys<T>(this T ent, string dbid = null, string tableSuffix = null,string tag=null) where T : BaseEntity
         {
             if (ent == null)
                 throw new Exception("实列对象不可为空");
             try
             {
                 dbid = Tools.GetDBID(dbid);
-                var ps = ent.GetDelByPrimaryKey_SQL(dbid);
+                var ps = ent.GetDelByPrimaryKey_SQL(dbid,tableSuffix,tag);
                 return DBFactory.Instance.Execute(dbid, ps.SqlStr, ps.Params);
             }
             catch (Exception)
@@ -818,14 +744,14 @@ namespace Qing.DB
 
         }
 
-        public static Task<int> RemoveByPrimaryKeysAsync<T>(this T ent, string dbid = "") where T : BaseEntity
+        public static Task<int> RemoveByPrimaryKeysAsync<T>(this T ent, string dbid = null, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ent == null)
                 throw new Exception("实列对象不可为空");
             try
             {
                 dbid = Tools.GetDBID(dbid);
-                var ps = ent.GetDelByPrimaryKey_SQL(dbid);
+                var ps = ent.GetDelByPrimaryKey_SQL(dbid,tableSuffix,tag);
                 return DBFactory.Instance.ExecuteAsync(dbid, ps.SqlStr, ps.Params);
             }
             catch (Exception)
@@ -842,14 +768,14 @@ namespace Qing.DB
         /// <param name="transaction"></param>
         /// <param name="primayValue"></param>
         /// <returns></returns>
-        public static int RemoveByPrimaryKeys<T>(this T ent, IDbTransaction transaction) where T : BaseEntity
+        public static int RemoveByPrimaryKeys<T>(this T ent, IDbTransaction transaction, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ent == null)
                 throw new Exception("实列对象不可为空");
 
             try
             {
-                var ps = ent.GetDelByPrimaryKey_SQL(transaction.Connection.Database);
+                var ps = ent.GetDelByPrimaryKey_SQL(transaction.Connection.Database, tableSuffix,tag);
                 return transaction.Connection.Execute(ps.SqlStr, ps.Params, transaction);
             }
             catch (Exception)
@@ -860,14 +786,14 @@ namespace Qing.DB
 
         }
 
-        public static Task<int> RemoveByPrimaryKeysAsync<T>(this T ent, IDbTransaction transaction) where T : BaseEntity
+        public static Task<int> RemoveByPrimaryKeysAsync<T>(this T ent, IDbTransaction transaction, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ent == null)
                 throw new Exception("实列对象不可为空");
 
             try
             {
-                var ps = ent.GetDelByPrimaryKey_SQL(transaction.Connection.Database);
+                var ps = ent.GetDelByPrimaryKey_SQL(transaction.Connection.Database, tableSuffix, tag);
                 return transaction.Connection.ExecuteAsync(ps.SqlStr, ps.Params, transaction);
             }
             catch (Exception)
@@ -878,14 +804,14 @@ namespace Qing.DB
 
         }
 
-        public static int RemoveByPrimaryKeys<T>(this T ent, DBContext context) where T : BaseEntity
+        public static int RemoveByPrimaryKeys<T>(this T ent, DBContext context, string tableSuffix = null) where T : BaseEntity
         {
             if (ent == null)
                 throw new Exception("实列对象不可为空");
 
             try
             {
-                var ps = ent.GetDelByPrimaryKey_SQL(context.CurrentDB);
+                var ps = ent.GetDelByPrimaryKey_SQL(context.CurrentDB, tableSuffix,context.Tag);
                 return context.Execute(ps.SqlStr, ps.Params);
             }
             catch (Exception)
@@ -896,14 +822,14 @@ namespace Qing.DB
 
         }
 
-        public static Task<int> RemoveByPrimaryKeysAsync<T>(this T ent, DBContext context) where T : BaseEntity
+        public static Task<int> RemoveByPrimaryKeysAsync<T>(this T ent, DBContext context, string tableSuffix = null) where T : BaseEntity
         {
             if (ent == null)
                 throw new Exception("实列对象不可为空");
 
             try
             {
-                var ps = ent.GetDelByPrimaryKey_SQL(context.CurrentDB);
+                var ps = ent.GetDelByPrimaryKey_SQL(context.CurrentDB,tableSuffix,context.Tag);
                 return context.ExecuteAsync(ps.SqlStr, ps.Params);
             }
             catch (Exception)
@@ -916,7 +842,7 @@ namespace Qing.DB
 
 
 
-        public static int RemoveByPrimaryKeys<T>(this List<T> ents, string dbid = "") where T : BaseEntity
+        public static int RemoveByPrimaryKeys<T>(this List<T> ents, string dbid = null, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ents == null)
                 throw new Exception("实列对象不可为空");
@@ -925,7 +851,7 @@ namespace Qing.DB
             try
             {
                 dbid = Tools.GetDBID(dbid);
-                var sql = ents.GetDelByPrimaryKey_SQL(dbid);
+                var sql = ents.GetDelByPrimaryKey_SQL(dbid,tableSuffix,tag);
                 return DBFactory.Instance.Execute(dbid, sql);
             }
             catch (Exception)
@@ -936,7 +862,7 @@ namespace Qing.DB
 
         }
 
-        public static Task<int> RemoveByPrimaryKeysTask<T>(this List<T> ents, string dbid = "") where T : BaseEntity
+        public static Task<int> RemoveByPrimaryKeysTask<T>(this List<T> ents, string dbid = null, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ents == null)
                 throw new Exception("实列对象不可为空");
@@ -945,7 +871,7 @@ namespace Qing.DB
             try
             {
                 dbid = Tools.GetDBID(dbid);
-                var sql = ents.GetDelByPrimaryKey_SQL(dbid);
+                var sql = ents.GetDelByPrimaryKey_SQL(dbid,tableSuffix,tag);
                 return DBFactory.Instance.ExecuteAsync(dbid, sql);
             }
             catch (Exception)
@@ -956,7 +882,7 @@ namespace Qing.DB
 
         }
 
-        public static int RemoveByPrimaryKeys<T>(this List<T> ents, IDbTransaction transaction) where T : BaseEntity
+        public static int RemoveByPrimaryKeys<T>(this List<T> ents, IDbTransaction transaction, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ents == null)
                 throw new Exception("实列对象不可为空");
@@ -964,7 +890,7 @@ namespace Qing.DB
                 throw new Exception("实列对象集合无数据");
             try
             {
-                var sql = ents.GetDelByPrimaryKey_SQL(transaction.Connection.Database);
+                var sql = ents.GetDelByPrimaryKey_SQL(transaction.Connection.Database,tableSuffix,tag);
                 return transaction.Connection.Execute(sql, null, transaction);
             }
             catch (Exception)
@@ -975,7 +901,7 @@ namespace Qing.DB
 
         }
 
-        public static Task<int> RemoveByPrimaryKeysAsync<T>(this List<T> ents, IDbTransaction transaction) where T : BaseEntity
+        public static Task<int> RemoveByPrimaryKeysAsync<T>(this List<T> ents, IDbTransaction transaction, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ents == null)
                 throw new Exception("实列对象不可为空");
@@ -983,7 +909,7 @@ namespace Qing.DB
                 throw new Exception("实列对象集合无数据");
             try
             {
-                var sql = ents.GetDelByPrimaryKey_SQL(transaction.Connection.Database);
+                var sql = ents.GetDelByPrimaryKey_SQL(transaction.Connection.Database,tableSuffix,tag);
                 return transaction.Connection.ExecuteAsync(sql, null, transaction);
             }
             catch (Exception)
@@ -994,7 +920,7 @@ namespace Qing.DB
 
         }
 
-        public static int RemoveByPrimaryKeys<T>(this List<T> ents, DBContext context) where T : BaseEntity
+        public static int RemoveByPrimaryKeys<T>(this List<T> ents, DBContext context, string tableSuffix = null) where T : BaseEntity
         {
             if (ents == null)
                 throw new Exception("实列对象不可为空");
@@ -1002,7 +928,7 @@ namespace Qing.DB
                 throw new Exception("实列对象集合无数据");
             try
             {
-                var sql = ents.GetDelByPrimaryKey_SQL(context.CurrentDB);
+                var sql = ents.GetDelByPrimaryKey_SQL(context.CurrentDB,tableSuffix,context.Tag);
                 return context.Execute(sql, null);
             }
             catch (Exception)
@@ -1013,7 +939,7 @@ namespace Qing.DB
 
         }
 
-        public static Task<int> RemoveByPrimaryKeysAsync<T>(this List<T> ents, DBContext context) where T : BaseEntity
+        public static Task<int> RemoveByPrimaryKeysAsync<T>(this List<T> ents, DBContext context, string tableSuffix = null) where T : BaseEntity
         {
             if (ents == null)
                 throw new Exception("实列对象不可为空");
@@ -1021,7 +947,7 @@ namespace Qing.DB
                 throw new Exception("实列对象集合无数据");
             try
             {
-                var sql = ents.GetDelByPrimaryKey_SQL(context.CurrentDB);
+                var sql = ents.GetDelByPrimaryKey_SQL(context.CurrentDB,tableSuffix,context.Tag);
                 return context.ExecuteAsync(sql, null);
             }
             catch (Exception)
@@ -1039,38 +965,31 @@ namespace Qing.DB
 
 
 
-        //public static int UpdateByPrimaryKeys<T>(this T ent, string dbid, params string[] fields) where T : BaseEntity
-        //{
-        //    dbid = Tools.GetDBID(dbid);
-        //    var ps = ent.GetUpdateFieldsByPrimaryKey_Sql(dbid, fields);
-        //    return DBFactory.Instance.Execute(dbid, ps.SqlStr, ps.Params);
-        //}
-        public static int UpdateByPrimaryKeys<T>(this T ent, params string[] fields) where T : BaseEntity
+     
+        public static int UpdateByPrimaryKeys<T>(this T ent,  string[] fields,string dbid=null,string tableSuffix = null, string tag = null) where T : BaseEntity
         {
-            var ps = ent.GetUpdateFieldsByPrimaryKey_Sql(DBFactory.Instance.DefaultDBID(), fields);
-            return DBFactory.Instance.Execute(DBFactory.Instance.DefaultDBID(), ps.SqlStr, ps.Params);
+            dbid = Tools.GetDBID(dbid);
+            var ps = ent.GetUpdateFieldsByPrimaryKey_Sql(dbid, fields,tableSuffix,tag);
+            return DBFactory.Instance.Execute(dbid, ps.SqlStr, ps.Params);
         }
 
-        public static Task<int> UpdateByPrimaryKeysAsync<T>(this T ent, params string[] fields) where T : BaseEntity
+        public static Task<int> UpdateByPrimaryKeysAsync<T>(this T ent,  string[] fields, string dbid = null, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
-            var ps = ent.GetUpdateFieldsByPrimaryKey_Sql(DBFactory.Instance.DefaultDBID(), fields);
-            return DBFactory.Instance.ExecuteAsync(DBFactory.Instance.DefaultDBID(), ps.SqlStr, ps.Params);
+            dbid = Tools.GetDBID(dbid);
+            var ps = ent.GetUpdateFieldsByPrimaryKey_Sql(dbid, fields, tableSuffix, tag);
+            return DBFactory.Instance.ExecuteAsync(dbid, ps.SqlStr, ps.Params);
         }
 
-        //public static int UpdateByPrimaryKeys<T>(this T ent, IDbTransaction transaction, params string[] fields) where T : BaseEntity
-        //{
-        //    var ps = ent.GetUpdateFieldsByPrimaryKey_Sql(transaction.Connection.Database, fields);
-        //    return transaction.Connection.Execute(ps.SqlStr, ps.Params, transaction);
-        //}
-        public static int UpdateByPrimaryKeys<T>(this T ent, DBContext context, params string[] fields) where T : BaseEntity
+      
+        public static int UpdateByPrimaryKeys<T>(this T ent, DBContext context,  string[] fields, string tableSuffix = null) where T : BaseEntity
         {
-            var ps = ent.GetUpdateFieldsByPrimaryKey_Sql(context.CurrentDB, fields);
+            var ps = ent.GetUpdateFieldsByPrimaryKey_Sql(context.CurrentDB, fields,tableSuffix,context.Tag);
             return context.Execute(ps.SqlStr, ps.Params);
         }
 
-        public static Task<int> UpdateByPrimaryKeysAsync<T>(this T ent, DBContext context, params string[] fields) where T : BaseEntity
+        public static Task<int> UpdateByPrimaryKeysAsync<T>(this T ent, DBContext context,  string[] fields, string tableSuffix = null) where T : BaseEntity
         {
-            var ps = ent.GetUpdateFieldsByPrimaryKey_Sql(context.CurrentDB, fields);
+            var ps = ent.GetUpdateFieldsByPrimaryKey_Sql(context.CurrentDB, fields,tableSuffix,context.Tag);
             return context.ExecuteAsync(ps.SqlStr, ps.Params);
         }
 
@@ -1078,10 +997,10 @@ namespace Qing.DB
         /// <summary>
         /// 通过主键更新
         /// </summary>
-        /// <param name="dbID"></param>
+        /// <param name="dbid"></param>
         /// <param name="ent"></param>
         /// <returns></returns>
-        public static int UpdateByPrimaryKeys<T>(this T ent, string dbid = "") where T : BaseEntity
+        public static int UpdateByPrimaryKeys<T>(this T ent, string dbid = null, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ent == null)
                 throw new Exception("实列对象不可为空");
@@ -1089,7 +1008,7 @@ namespace Qing.DB
             try
             {
                 dbid = Tools.GetDBID(dbid);
-                var ps = ent.GetUpdateByPrimaryKey_Sql(dbid);
+                var ps = ent.GetUpdateByPrimaryKey_Sql(dbid,tableSuffix,tag);
                 return DBFactory.Instance.Execute(dbid, ps.SqlStr, ps.Params);
             }
             catch (Exception)
@@ -1100,7 +1019,7 @@ namespace Qing.DB
 
         }
 
-        public static Task<int> UpdateByPrimaryKeysAsync<T>(this T ent, string dbid = "") where T : BaseEntity
+        public static Task<int> UpdateByPrimaryKeysAsync<T>(this T ent, string dbid = null, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ent == null)
                 throw new Exception("实列对象不可为空");
@@ -1108,7 +1027,7 @@ namespace Qing.DB
             try
             {
                 dbid = Tools.GetDBID(dbid);
-                var ps = ent.GetUpdateByPrimaryKey_Sql(dbid);
+                var ps = ent.GetUpdateByPrimaryKey_Sql(dbid,tableSuffix,tag);
                 return DBFactory.Instance.ExecuteAsync(dbid, ps.SqlStr, ps.Params);
             }
             catch (Exception)
@@ -1119,14 +1038,14 @@ namespace Qing.DB
 
         }
 
-        public static int UpdateByPrimaryKeys<T, TResult>(this T t, Expression<Func<T, TResult>> expressionNew, string dbid = "") where T : BaseEntity
+        public static int UpdateByPrimaryKeys<T, TResult>(this T t, Expression<Func<T, TResult>> expressionNew, string dbid = null, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
 
             if (t == null)
                 throw new Exception("实列对象不可为空");
 
             ParamSql ps = new ParamSql();
-            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew);
+            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew,tag);
             StringBuilder sb_setStr = new StringBuilder();
             foreach (var item in dic_update)
             {
@@ -1141,12 +1060,12 @@ namespace Qing.DB
             try
             {
                 dbid = Tools.GetDBID(dbid);
-                var nea = t.GetNEA();
+                var nea = t.GetNEA(tag);
                 foreach (var pk in pks)
                 {
                     sb_where.Append($" and {nea._Lr}{pk.Key}{nea._Rr}='{pk.Value}'");
                 }
-                string sql = $"update {nea.TableName} set {setStr} where {sb_where.ToString()};";
+                string sql = $"update {nea.TableSuffixName(tableSuffix)} set {setStr} where {sb_where.ToString()};";
                 return DBFactory.Instance.Execute(dbid, sql, ps.Params);
             }
             catch (Exception)
@@ -1157,14 +1076,14 @@ namespace Qing.DB
 
         }
 
-        public static Task<int> UpdateByPrimaryKeysAsync<T, TResult>(this T t, Expression<Func<T, TResult>> expressionNew, string dbid = "") where T : BaseEntity
+        public static Task<int> UpdateByPrimaryKeysAsync<T, TResult>(this T t, Expression<Func<T, TResult>> expressionNew, string dbid = null, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
 
             if (t == null)
                 throw new Exception("实列对象不可为空");
 
             ParamSql ps = new ParamSql();
-            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew);
+            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew,tag);
             StringBuilder sb_setStr = new StringBuilder();
             foreach (var item in dic_update)
             {
@@ -1179,12 +1098,12 @@ namespace Qing.DB
             try
             {
                 dbid = Tools.GetDBID(dbid);
-                var nea = t.GetNEA();
+                var nea = t.GetNEA(tag);
                 foreach (var pk in pks)
                 {
                     sb_where.Append($" and {nea._Lr}{pk.Key}{nea._Rr}='{pk.Value}'");
                 }
-                string sql = $"update {nea.TableName} set {setStr} where {sb_where.ToString()};";
+                string sql = $"update {nea.TableSuffixName(tableSuffix)} set {setStr} where {sb_where.ToString()};";
                 return DBFactory.Instance.ExecuteAsync(dbid, sql, ps.Params);
             }
             catch (Exception)
@@ -1201,14 +1120,14 @@ namespace Qing.DB
         /// <param name="transaction"></param>
         /// <param name="ent"></param>
         /// <returns></returns>
-        public static int UpdateByPrimaryKeys<T>(this T ent, IDbTransaction transaction) where T : BaseEntity
+        public static int UpdateByPrimaryKeys<T>(this T ent, IDbTransaction transaction, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ent == null)
                 throw new Exception("实列对象不可为空");
 
             try
             {
-                var ps = ent.GetUpdateByPrimaryKey_Sql(transaction.Connection.Database);
+                var ps = ent.GetUpdateByPrimaryKey_Sql(transaction.Connection.Database,tableSuffix,tag);
                 return transaction.Connection.Execute(ps.SqlStr, ps.Params, transaction);
             }
             catch (Exception)
@@ -1220,14 +1139,14 @@ namespace Qing.DB
 
         }
 
-        public static Task<int> UpdateByPrimaryKeysAsync<T>(this T ent, IDbTransaction transaction) where T : BaseEntity
+        public static Task<int> UpdateByPrimaryKeysAsync<T>(this T ent, IDbTransaction transaction, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
             if (ent == null)
                 throw new Exception("实列对象不可为空");
 
             try
             {
-                var ps = ent.GetUpdateByPrimaryKey_Sql(transaction.Connection.Database);
+                var ps = ent.GetUpdateByPrimaryKey_Sql(transaction.Connection.Database,tableSuffix,tag);
                 return transaction.Connection.ExecuteAsync(ps.SqlStr, ps.Params, transaction);
             }
             catch (Exception)
@@ -1239,14 +1158,14 @@ namespace Qing.DB
 
         }
 
-        public static int UpdateByPrimaryKeys<T, TResult>(this T t, Expression<Func<T, TResult>> expressionNew, IDbTransaction transaction) where T : BaseEntity
+        public static int UpdateByPrimaryKeys<T, TResult>(this T t, Expression<Func<T, TResult>> expressionNew, IDbTransaction transaction, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
 
             if (t == null)
                 throw new Exception("实列对象不可为空");
 
             ParamSql ps = new ParamSql();
-            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew);
+            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew,tag);
             StringBuilder sb_setStr = new StringBuilder();
             foreach (var item in dic_update)
             {
@@ -1260,12 +1179,12 @@ namespace Qing.DB
            
             try
             {
-                var nea = t.GetNEA();
+                var nea = t.GetNEA(tag);
                 foreach (var pk in pks)
                 {
                     sb_where.Append($" and {nea._Lr}{pk.Key}{nea._Rr}='{pk.Value}'");
                 }
-                string sql = $"update {nea.TableName} set {setStr} where {sb_where.ToString()};";
+                string sql = $"update {nea.TableSuffixName(tableSuffix)} set {setStr} where {sb_where.ToString()};";
                 return transaction.Connection.Execute(sql, ps.Params, transaction);
             }
             catch (Exception)
@@ -1275,14 +1194,14 @@ namespace Qing.DB
             }
         }
 
-        public static Task<int> UpdateByPrimaryKeysAsync<T, TResult>(this T t, Expression<Func<T, TResult>> expressionNew, IDbTransaction transaction) where T : BaseEntity
+        public static Task<int> UpdateByPrimaryKeysAsync<T, TResult>(this T t, Expression<Func<T, TResult>> expressionNew, IDbTransaction transaction, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
 
             if (t == null)
                 throw new Exception("实列对象不可为空");
 
             ParamSql ps = new ParamSql();
-            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew);
+            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew,tag);
             StringBuilder sb_setStr = new StringBuilder();
             foreach (var item in dic_update)
             {
@@ -1295,12 +1214,12 @@ namespace Qing.DB
             var pks = t.GetPrimaryKey();
             try
             {
-                var nea = t.GetNEA();
+                var nea = t.GetNEA(tag);
                 foreach (var pk in pks)
                 {
                     sb_where.Append($" and {nea._Lr}{pk.Key}{nea._Rr}='{pk.Value}'");
                 }
-                string sql = $"update {nea.TableName} set {setStr} where {sb_where.ToString()};";
+                string sql = $"update {nea.TableSuffixName(tableSuffix)} set {setStr} where {sb_where.ToString()};";
                 return transaction.Connection.ExecuteAsync(sql, ps.Params, transaction);
             }
             catch (Exception)
@@ -1385,9 +1304,10 @@ namespace Qing.DB
         }
         #endregion
 
-        public static QingEntityAttribute GetNEA<T>(this T t) where T : BaseEntity
+        public static QingEntityAttribute GetNEA<T>(this T t,string tag=null) where T : BaseEntity
         {
-            return (QingEntityAttribute)Attribute.GetCustomAttribute(t.GetType(), typeof(QingEntityAttribute));
+          return  Tools.GetNEA(typeof(T), tag);
+           // return (QingEntityAttribute)Attribute.GetCustomAttribute(t.GetType(), typeof(QingEntityAttribute));
         }
 
 
@@ -1431,7 +1351,7 @@ namespace Qing.DB
 
         }
 
-        public static bool Refresh<T>(this T t, string dbid = "") where T : BaseEntity
+        public static bool Refresh<T>(this T t, string dbid = null, string tableSuffix = null, string tag = null) where T : BaseEntity
         {
 
             if (t == null)
@@ -1440,7 +1360,7 @@ namespace Qing.DB
             try
             {
                 dbid = Tools.GetDBID(dbid);
-                var nea = t.GetNEA();
+                var nea = t.GetNEA(tag);
                 var primaryKeys = t.GetPrimaryKey();
                 StringBuilder sb_pkwhere = new StringBuilder();
                 foreach (var item in primaryKeys)
@@ -1448,7 +1368,7 @@ namespace Qing.DB
                     sb_pkwhere.Append($"{nea._Lr}{item.Key}{nea._Rr} = '{item.Value}',");
                 }
 
-                var paramSql = new ParamSql($" select {t.GetBaseFieldsStr()} from {nea.ToSqlDBName(dbid)}.{nea.TableName} where {sb_pkwhere.ToString().TrimEnd(',')}");
+                var paramSql = new ParamSql($" select {t.GetBaseFieldsStr()} from {nea.ToSqlDBName(dbid)}.{nea.TableSuffixName(tableSuffix)} where {sb_pkwhere.ToString().TrimEnd(',')}");
                 var tResult = DBFactory.Instance.Query<T>(dbid, paramSql.SqlStr, paramSql.Params).FirstOrDefault();
                 if (tResult != null)
                 {
@@ -1547,7 +1467,7 @@ namespace Qing.DB
         /// <param name="context"></param>
         /// <param name="second"></param>
         /// <returns></returns>
-        public static int CompareChangeToUpdateByPrimaryKey<T>(this T self, DBContext context, T source) where T : BaseEntity
+        public static int CompareChangeToUpdateByPrimaryKey<T>(this T self, DBContext context, T source,string tag=null) where T : BaseEntity
         {
             var ps = CreateCompareChangeSqlByPrimaryKey(self, source, context.CurrentDB);
             if (ps.SqlStr != null)
@@ -1675,14 +1595,14 @@ namespace Qing.DB
             }
         }
 
-        internal static ParamSql CreateCompareChangeSqlByPrimaryKey<T>(T self, T source, string dbID) where T : BaseEntity
+        internal static ParamSql CreateCompareChangeSqlByPrimaryKey<T>(T self, T source, string dbid) where T : BaseEntity
         {
             bool changed = false;
             ParamSql ps = new ParamSql();
             Dictionary<string, string> Primarys = new Dictionary<string, string>();
             var nea = self.GetNEA();
             var primaryKeys = nea.PrimaryKey.Split(',').ToList();
-            StringBuilder sb_SQL = new StringBuilder(string.Format($"Update {nea.ToSqlDBName(dbID)}.{nea.TableName} set "));
+            StringBuilder sb_SQL = new StringBuilder(string.Format($"Update {nea.ToSqlDBName(dbid)}.{nea.TableName} set "));
 
 
             PropertyInfo[] pros = self.GetType().GetProperties();
@@ -1755,12 +1675,12 @@ namespace Qing.DB
 
             return ps;
         }
-        internal static ParamSql CreateCompareChangeSql<T>(T self, T source, string dbID, Expression<Func<T, bool>> where) where T : BaseEntity
+        internal static ParamSql CreateCompareChangeSql<T>(T self, T source, string dbid, Expression<Func<T, bool>> where) where T : BaseEntity
         {
             bool changed = false;
             ParamSql ps = new ParamSql();
             var nea = self.GetNEA();
-            StringBuilder sb_SQL = new StringBuilder(string.Format($"Update {nea.ToSqlDBName(dbID)}.{nea.TableName} set "));
+            StringBuilder sb_SQL = new StringBuilder(string.Format($"Update {nea.ToSqlDBName(dbid)}.{nea.TableName} set "));
 
 
             PropertyInfo[] pros = self.GetType().GetProperties();
