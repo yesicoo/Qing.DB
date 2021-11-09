@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Dapper;
 using Qing.DB.Model;
-using Qing.DB.Model;
 
 namespace Qing.DB
 {

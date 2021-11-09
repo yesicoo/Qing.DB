@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data;
 using MySql.Data.MySqlClient;
-using Qing.DB.Model;
 using System.Collections.Concurrent;
 
 namespace Qing.DB

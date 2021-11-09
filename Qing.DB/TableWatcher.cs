@@ -91,25 +91,22 @@ namespace Qing.DB
                         foreach (var item in indexs)
                         {
                             string indexFileds = string.Join($"{nea._Rr},{nea._Lr}", item.IndexFileds.Split(','));
-                            sb_index.Append($"CREATE NONCLUSTERED INDEX {item.IndexName} ON {nea.TableName} ({indexFileds});");
+                            sb_index.Append($"CREATE NONCLUSTERED INDEX {item.IndexName} ON {nea.TableSuffixName(tableSuffix)} ({indexFileds});");
                         }
                     }
-                    string createTableSql = $"CREATE TABLE {nea.TableName}  ({sb_Sql.ToString().TrimEnd(',')});{sb_index}";
+                    string createTableSql = $"CREATE TABLE {nea.TableSuffixName(tableSuffix)}  ({sb_Sql.ToString().TrimEnd(',')});{sb_index}";
                     if (IsForce)
                     {
-                        createTableSql = $"DROP TABLE IF EXISTS  {nea.TableName};" + createTableSql;
+                        createTableSql = $"DROP TABLE IF EXISTS  {nea.TableSuffixName(tableSuffix)};" + createTableSql;
                     }
                     else
                     {
-                        createTableSql = $"if not exists (select * from sysobjects where id = object_id('{Tools.ConvertSuffixTableName(nea._tableName, tableSuffix, nea._dbType)}') and OBJECTPROPERTY(id, 'IsUserTable') = 1) " + createTableSql;
+                        createTableSql = $"if not exists (select * from sysobjects where id = object_id('{nea.TableSuffixName(tableSuffix)}') and OBJECTPROPERTY(id, 'IsUserTable') = 1) " + createTableSql;
                     }
 
-                    if (!string.IsNullOrEmpty(tableSuffix))
-                    {
-                        createTableSql = Tools.AppendTableSuffix(nea, createTableSql, tableSuffix);
-                    }
+                   
                     int result = DBFactory.Instance.Execute(dbid, createTableSql);
-                    SqlLogUtil.SendLog(LogType.Msg, "Create Table:" + nea.TableName + " -->" + result);
+                    SqlLogUtil.SendLog(LogType.Msg, "Create Table:" + nea.TableSuffixName(tableSuffix) + " -->" + result);
                 }
                 else
                 {
@@ -171,26 +168,20 @@ namespace Qing.DB
                     }
                     if (IsForce)
                     {
-                        string createTableSql = $"DROP TABLE IF EXISTS {nea._Lr}{dbid}{nea._Rr}.{nea.TableName};CREATE TABLE {nea._Lr}{dbid}{nea._Rr}.{nea.TableName}  ({sb_Sql.ToString().TrimEnd(',')});";
-                        SqlLogUtil.SendLog(LogType.Msg, "Create Table:" + nea.TableName);
-                        if (!string.IsNullOrEmpty(tableSuffix))
-                        {
-                            createTableSql = Tools.AppendTableSuffix(nea, createTableSql, tableSuffix);
-                        }
+                        string createTableSql = $"DROP TABLE IF EXISTS {nea._Lr}{dbid}{nea._Rr}.{nea.TableSuffixName(tableSuffix)};CREATE TABLE {nea._Lr}{dbid}{nea._Rr}.{nea.TableSuffixName(tableSuffix)}  ({sb_Sql.ToString().TrimEnd(',')});";
+                        SqlLogUtil.SendLog(LogType.Msg, "Create Table:" + nea.TableSuffixName(tableSuffix));
+                       
                         DBFactory.Instance.Execute(dbid, createTableSql);
                     }
                     else
                     {
-                        string checkSql = $"SELECT COUNT(*) FROM information_schema.TABLES WHERE table_name = '{Tools.ConvertSuffixTableName(nea._tableName, tableSuffix, nea._dbType)}' AND TABLE_SCHEMA='{dbid}'";
+                        string checkSql = $"SELECT COUNT(*) FROM information_schema.TABLES WHERE table_name = '{nea.TableSuffixName(tableSuffix)}' AND TABLE_SCHEMA='{dbid}'";
                         var tab = DBFactory.Instance.QueryFirstOrDefault<int>(dbid, checkSql);
                         if (tab == 0)
                         {
-                            string createTableSql = $"CREATE TABLE {nea._Lr}{dbid}{nea._Rr}.{nea.TableName}  ({sb_Sql.ToString().TrimEnd(',')});";
-                            SqlLogUtil.SendLog(LogType.Msg, "Create Table:" + nea.TableName);
-                            if (!string.IsNullOrEmpty(tableSuffix))
-                            {
-                                createTableSql = Tools.AppendTableSuffix(nea, createTableSql, tableSuffix);
-                            }
+                            string createTableSql = $"CREATE TABLE {nea._Lr}{dbid}{nea._Rr}.{nea.TableSuffixName(tableSuffix)}  ({sb_Sql.ToString().TrimEnd(',')});";
+                            SqlLogUtil.SendLog(LogType.Msg, "Create Table:" + nea.TableSuffixName(tableSuffix));
+                           
                             DBFactory.Instance.Execute(dbid, createTableSql);
                         }
                     }

@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using Qing.DB.QingQuery;
 using Qing.DB.Model;
-using Qing.DB.Model;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -453,11 +452,7 @@ namespace Qing.DB
             ExpressionResolver.ResoveWhereExpression(this, expression);
             var nea = Tools.GetNEA(typeof(T),dbConnection.Tag);
 
-            string sql = $"Delete from {dbConnection.SqlConnection.Database}.{nea.TableName} where {WhereStr} ";
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+            string sql = $"Delete from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)} where {WhereStr} ";
             return dbConnection.Execute(sql, SqlParams);
         }
 
@@ -466,11 +461,8 @@ namespace Qing.DB
             ExpressionResolver.ResoveWhereExpression(this, expression);
             var nea = Tools.GetNEA(typeof(T), dbConnection.Tag);
 
-            string sql = $"Delete from {dbConnection.SqlConnection.Database}.{nea.TableName} where {WhereStr} ";
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+            string sql = $"Delete from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)} where {WhereStr} ";
+           
             return dbConnection.ExecuteAsync(sql, SqlParams);
         }
 
@@ -492,11 +484,8 @@ namespace Qing.DB
                     wheres.Add($"{nea._Lr}{pks[i]}{nea._Rr}=@{key}");
                     SqlParams.Add(key, primaryKeys[i]);
                 }
-                string sql = $"Delete from {dbConnection.SqlConnection.Database}.{nea.TableName} where {string.Join(" and ", wheres)};";
-                if (!string.IsNullOrEmpty(TableSuffix))
-                {
-                    sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-                }
+                string sql = $"Delete from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)} where {string.Join(" and ", wheres)};";
+             
                 return dbConnection.Execute(sql, SqlParams);
             }
 
@@ -520,11 +509,8 @@ namespace Qing.DB
                     wheres.Add($"{nea._Lr}{pks[i]}{nea._Rr}=@{key}");
                     SqlParams.Add(key, primaryKeys[i]);
                 }
-                string sql = $"Delete from {dbConnection.SqlConnection.Database}.{nea.TableName} where {string.Join(" and ", wheres)};";
-                if (!string.IsNullOrEmpty(TableSuffix))
-                {
-                    sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-                }
+                string sql = $"Delete from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)} where {string.Join(" and ", wheres)};";
+               
                 return dbConnection.ExecuteAsync(sql, SqlParams);
             }
 
@@ -532,21 +518,7 @@ namespace Qing.DB
 
 
 
-        public T QueryByPrimaryKeys(params object[] primaryKeys)
-        {
-            var nea = Tools.GetNEA(typeof(T), dbConnection.Tag);
-            T result = default(T);
-            var ps = result.GetByPrimaryKey_SQL(dbConnection.SqlConnection.Database, primaryKeys);
-            return dbConnection.QuerySingle<T>(ps.SqlStr, ps.Params);
-        }
-
-        public Task<T> QueryByPrimaryKeysAsync(params object[] primaryKeys)
-        {
-            var nea = Tools.GetNEA(typeof(T), dbConnection.Tag);
-            T result = default(T);
-            var ps = result.GetByPrimaryKey_SQL(dbConnection.SqlConnection.Database, primaryKeys);
-            return dbConnection.QuerySingleAsync<T>(ps.SqlStr, ps.Params);
-        }
+       
 
         public int Update<TResult>(Expression<Func<T, TResult>> expressionNew, Expression<Func<T, bool>> expressionWhere)
         {
@@ -564,11 +536,8 @@ namespace Qing.DB
             var ps_where = ExpressionResolver.ResoveExpression(expressionWhere.Body, tag: dbConnection.Tag);
             ps.Params.AddDynamicParams(ps_where.Params);
 
-            string sql = $"update {nea.TableName} set {setStr} where {ps_where.SqlStr};";
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+            string sql = $"update {nea.TableSuffixName(TableSuffix)} set {setStr} where {ps_where.SqlStr};";
+          
             return dbConnection.Execute(sql, ps.Params);
         }
 
@@ -588,11 +557,8 @@ namespace Qing.DB
             var ps_where = ExpressionResolver.ResoveExpression(expressionWhere.Body, tag: dbConnection.Tag);
             ps.Params.AddDynamicParams(ps_where.Params);
 
-            string sql = $"update {nea.TableName} set {setStr} where {ps_where.SqlStr};";
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+            string sql = $"update {nea.TableSuffixName(TableSuffix)} set {setStr} where {ps_where.SqlStr};";
+           
             return dbConnection.ExecuteAsync(sql, ps.Params);
         }
 
@@ -671,7 +637,7 @@ namespace Qing.DB
                 Fields = sb.ToString().TrimEnd(',');
             }
             var fieldsStr = Fields ?? "*";
-            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableName}");
+            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)}");
             if (!string.IsNullOrEmpty(WhereStr))
             {
                 sb_sql.Append($" where {WhereStr}");
@@ -689,10 +655,7 @@ namespace Qing.DB
                 sb_sql.Append($" {Limit}");
             }
             string sql= sb_sql.ToString();
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+           
             return sql;
         }
 
@@ -725,7 +688,7 @@ namespace Qing.DB
             {
                 top = "top " + count;
             }
-            StringBuilder sb_sql = new StringBuilder($"select {top} {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableName}");
+            StringBuilder sb_sql = new StringBuilder($"select {top} {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)}");
             if (!string.IsNullOrEmpty(WhereStr))
             {
                 sb_sql.Append($" where {WhereStr}");
@@ -743,10 +706,7 @@ namespace Qing.DB
                 sb_sql.Append($" limit {count}");
             }
             string sql = sb_sql.ToString();
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+          
             return sql;
         }
 
@@ -774,7 +734,7 @@ namespace Qing.DB
                 Fields = sb.ToString().TrimEnd(',');
             }
             var fieldsStr = Fields ?? "*";
-            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableName}");
+            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)}");
             if (!string.IsNullOrEmpty(WhereStr))
             {
                 sb_sql.Append($" where {WhereStr}");
@@ -790,10 +750,7 @@ namespace Qing.DB
 
             sb_sql.Append($"limit {pageSize * (pageNum - 1)},{pageSize}");
             string sql = sb_sql.ToString();
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+           
             return sql;
         }
 
@@ -856,20 +813,16 @@ namespace Qing.DB
                 //WITH t AS ( SELECT a.[CustomerID], a.[CustomerName], a.[CustomerPhoneNum], ROW_NUMBER() OVER(  ORDER BY a.[CustomerPhoneNum]) AS __rownum__ FROM[Customers] a ) SELECT t.* FROM t where __rownum__ between 5 and 8;
                 //WITH t AS ( SELECT [dbo].[customers].[CustomerName],[dbo].[customers].[CustomerPhoneNum] as '手机号', ROW_NUMBER() OVER(   Order By [CustomerID]) AS __rownum__ FROM [Test].[dbo].[customers]    Order By [CustomerID] ) SELECT t.* FROM t where __rownum__ between 1 and 5”
 
-                sql= $"WITH t AS ( SELECT {fieldsStr.TrimStart(',')}, ROW_NUMBER() OVER(  {orderBy}) AS __rownum__ FROM {dbConnection.SqlConnection.Database}.{nea.TableName} {where} {group}  ) SELECT t.* FROM t where __rownum__ between {(pageNum-1)*pageSize+1} and {pageNum*pageSize}";
+                sql= $"WITH t AS ( SELECT {fieldsStr.TrimStart(',')}, ROW_NUMBER() OVER(  {orderBy}) AS __rownum__ FROM {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)} {where} {group}  ) SELECT t.* FROM t where __rownum__ between {(pageNum-1)*pageSize+1} and {pageNum*pageSize}";
             }
             else
             {
                 //sqlserver2012及以上(包含) 使用offset fetch next分页查询
                 //SELECT a.[CustomerID], a.[CustomerName], a.[CustomerPhoneNum] FROM[Customers] a ORDER BY a.[CustomerPhoneNum] OFFSET 4 ROW FETCH NEXT 4 ROW ONLY;
-                sql=  $"SELECT {fieldsStr.TrimStart(',')} FROM {dbConnection.SqlConnection.Database}.{nea.TableName} {where} {group} {orderBy} OFFSET {(pageNum - 1) * pageSize } ROW FETCH NEXT {pageSize} ROW ONLY";
+                sql=  $"SELECT {fieldsStr.TrimStart(',')} FROM {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)} {where} {group} {orderBy} OFFSET {(pageNum - 1) * pageSize } ROW FETCH NEXT {pageSize} ROW ONLY";
             }
 
            
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
             return sql;
         }
 
@@ -877,7 +830,7 @@ namespace Qing.DB
         {
             var nea = Tools.GetNEA(typeof(T), dbConnection.Tag);
             var fieldsStr = fields ?? "*";
-            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableName}");
+            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)}");
             if (!string.IsNullOrEmpty(WhereStr))
             {
                 sb_sql.Append($" where {WhereStr}");
@@ -895,17 +848,14 @@ namespace Qing.DB
                 sb_sql.Append($" {Limit}");
             }
             string sql = sb_sql.ToString();
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+          
             return sql;
         }
         private string BuildSql_Custom_Fields_Func(string fields)
         {
             var nea = Tools.GetNEA(typeof(T), dbConnection.Tag);
             var fieldsStr = fields ?? "*";
-            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableName}");
+            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)}");
             if (!string.IsNullOrEmpty(WhereStr))
             {
                 sb_sql.Append($" where {WhereStr}");
@@ -915,10 +865,7 @@ namespace Qing.DB
                 sb_sql.Append($" Group By {GroupByStr.TrimStart(',')}");
             }
             string sql = sb_sql.ToString();
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+          
             return sql;
         }
 
@@ -945,7 +892,7 @@ namespace Qing.DB
                 Fields = sb.ToString().TrimEnd(',');
             }
             var fieldsStr = Fields ?? "*";
-            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableName}");
+            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)}");
             if (!string.IsNullOrEmpty(whereStr))
             {
                 sb_sql.Append($" where {whereStr}");
@@ -963,10 +910,7 @@ namespace Qing.DB
                 sb_sql.Append($" {Limit}");
             }
             string sql = sb_sql.ToString();
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+          
             return sql;
         }
 
@@ -993,7 +937,7 @@ namespace Qing.DB
                 Fields = sb.ToString().TrimEnd(',');
             }
             var fieldsStr = Fields ?? "*";
-            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableName}");
+            StringBuilder sb_sql = new StringBuilder($"select {fieldsStr.TrimStart(',')} from {dbConnection.SqlConnection.Database}.{nea.TableSuffixName(TableSuffix)}");
             if (!string.IsNullOrEmpty(WhereStr))
             {
                 sb_sql.Append($" where {WhereStr}");
@@ -1011,10 +955,7 @@ namespace Qing.DB
                 sb_sql.Append($" {Limit}");
             }
             string sql = sb_sql.ToString();
-            if (!string.IsNullOrEmpty(TableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, TableSuffix);
-            }
+         
             return sql;
         }
 

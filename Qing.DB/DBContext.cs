@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using Qing.DB.Model;
-using Qing.DB.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -17,7 +16,7 @@ namespace Qing.DB
         DBConnectionItem connectionItem;
         DbTransaction dbTransaction;
         string DBName = string.Empty;
-       public string Tag = string.Empty;
+        public string Tag = string.Empty;
         public string CurrentDB
         {
             get
@@ -46,7 +45,7 @@ namespace Qing.DB
 
             if (connectionItem != null && connectionItem.SqlConnection.Database != DBName)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, tag);
             }
         }
 
@@ -64,7 +63,7 @@ namespace Qing.DB
             DBName = dbid;
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             else
             {
@@ -82,7 +81,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             dbTransaction = connectionItem.CreateTransaction();
             return dbTransaction;
@@ -91,7 +90,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             dbTransaction = connectionItem.CreateTransaction(iso);
             return dbTransaction;
@@ -134,17 +133,17 @@ namespace Qing.DB
         /// <typeparam name="T"></typeparam>
         /// <param name="AliasModel">别名模式</param>
         /// <returns></returns>
-        public IQingQuery<T> Query<T>(string tableSuffix=null, bool AliasModel = false) where T : BaseEntity
+        public IQingQuery<T> Query<T>(string tableSuffix = null, bool AliasModel = false) where T : BaseEntity
         {
-          
-                if (connectionItem == null)
-                {
-                    connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
-                }
-                return  new QingQuery<T>(connectionItem, AliasModel,tableSuffix );
-           
+
+            if (connectionItem == null)
+            {
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
+            }
+            return new QingQuery<T>(connectionItem, AliasModel, tableSuffix);
+
         }
-       
+
 
         /// <summary>
         /// 反解析SQL查询条件到Query对象
@@ -157,7 +156,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
 
             IQingQuery<T> query = new QingQuery<T>(connectionItem, AliasModel, tableSuffix);
@@ -169,7 +168,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
 
             return connectionItem.Query<T>(sql);
@@ -180,7 +179,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
 
             return await connectionItem.QueryAsync<T>(sql);
@@ -191,15 +190,15 @@ namespace Qing.DB
         {
             return new T();
         }
-        public Task<int> CreateAsync<T>(T t, string tableSuffix = null,bool ignoreInc = false) where T : BaseEntity
+        public Task<int> CreateAsync<T>(T t, string tableSuffix = null, bool ignoreInc = false) where T : BaseEntity
         {
             if (t == null)
             {
                 return Task.FromResult(-1);
             }
-            return Task.Run(()=> { return Create(t, tableSuffix, ignoreInc); });
+            return Task.Run(() => { return Create(t, tableSuffix, ignoreInc); });
         }
-        public int Create<T>(T t,string tableSuffix= null,bool ignoreInc = false) where T : BaseEntity
+        public int Create<T>(T t, string tableSuffix = null, bool ignoreInc = false) where T : BaseEntity
         {
             if (t == null)
             {
@@ -207,10 +206,10 @@ namespace Qing.DB
             }
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
 
-            var ps = t.GetInsert_Sql(connectionItem.SqlConnection.Database, tableSuffix, ignoreInc,Tag);
+            var ps = t.GetInsert_Sql(connectionItem.SqlConnection.Database, tableSuffix, ignoreInc, Tag);
             int sqlResult = -1;
             try
             {
@@ -218,20 +217,17 @@ namespace Qing.DB
             }
             catch (Exception ex)
             {
-                if (!DBFactory.Instance.AutoCreateTable)
+                if (DBFactory.Instance.AutoCreateTable)
                 {
-                    throw (ex);
-                }
-                if ((ex.InnerException.Message.StartsWith("对象名") && ex.InnerException.Message.EndsWith("无效。")) || ex.InnerException.Message.StartsWith("Invalid object name"))
-                {
-                    TableWatcher.CreateTable<T>(DBName, tableSuffix,tag:Tag);
-                    sqlResult = connectionItem.Execute(ps.SqlStr, ps.Params);
-                }
-                else
-                {
-                    throw (ex);
-                }
 
+                    if ((ex.InnerException.Message.StartsWith("对象名") && ex.InnerException.Message.EndsWith("无效。")) || ex.InnerException.Message.StartsWith("Invalid object name"))
+                    {
+                        TableWatcher.CreateTable<T>(DBName, tableSuffix, tag: Tag);
+                        sqlResult = connectionItem.Execute(ps.SqlStr, ps.Params);
+                        return sqlResult;
+                    }
+                }
+                throw new Exception(ex.Message);
             }
 
 
@@ -247,8 +243,8 @@ namespace Qing.DB
 
         }
 
-      
-        public int BatchCreate<T>(IEnumerable<T> ts, string tableSuffix = null,bool ignoreInc = false) where T : BaseEntity
+
+        public int BatchCreate<T>(IEnumerable<T> ts, string tableSuffix = null, bool ignoreInc = false) where T : BaseEntity
         {
             if (ts == null || ts.Count() == 0)
             {
@@ -258,7 +254,7 @@ namespace Qing.DB
             {
                 if (connectionItem == null)
                 {
-                    connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                    connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
                 }
 
                 var datas = ts.ToList();
@@ -282,26 +278,24 @@ namespace Qing.DB
                 }
                 else
                 {
-                    var ps = datas.GetInsert_Sql(connectionItem.SqlConnection.Database, tableSuffix, ignoreInc,Tag);
+                    var ps = datas.GetInsert_Sql(connectionItem.SqlConnection.Database, tableSuffix, ignoreInc, Tag);
                     try
                     {
                         return connectionItem.Execute(ps.SqlStr, ps.Params);
                     }
                     catch (Exception ex)
                     {
-                        if (!DBFactory.Instance.AutoCreateTable)
+                        if (DBFactory.Instance.AutoCreateTable)
                         {
-                            throw (ex);
+
+                            if ((ex.InnerException.Message.StartsWith("对象名") && ex.InnerException.Message.EndsWith("无效。")) || ex.InnerException.Message.StartsWith("Invalid object name"))
+                            {
+                                TableWatcher.CreateTable<T>(DBName, tableSuffix, ignoreInc, Tag);
+                                return connectionItem.Execute(ps.SqlStr, ps.Params);
+                            }
+
                         }
-                        if ((ex.InnerException.Message.StartsWith("对象名") && ex.InnerException.Message.EndsWith("无效。")) || ex.InnerException.Message.StartsWith("Invalid object name"))
-                        {
-                            TableWatcher.CreateTable<T>(DBName,tableSuffix, ignoreInc, Tag);
-                            return connectionItem.Execute(ps.SqlStr, ps.Params);
-                        }
-                        else
-                        {
-                            throw (ex);
-                        }
+                        throw new Exception (ex.Message);
                     }
                 }
 
@@ -310,7 +304,7 @@ namespace Qing.DB
             }
         }
 
-        public Task<int> BatchCreateAsync<T>(IEnumerable<T> ts, string tableSuffix = null,bool ignoreInc = false) where T : BaseEntity
+        public Task<int> BatchCreateAsync<T>(IEnumerable<T> ts, string tableSuffix = null, bool ignoreInc = false) where T : BaseEntity
         {
             if (ts == null || ts.Count() == 0)
             {
@@ -318,8 +312,8 @@ namespace Qing.DB
             }
             else
             {
-              return  Task.FromResult(BatchCreate(ts, tableSuffix, ignoreInc));
-              // return Task.Run(()=> { return BatchCreate(ts, tableSuffix, ignoreInc); });
+                return Task.FromResult(BatchCreate(ts, tableSuffix, ignoreInc));
+                // return Task.Run(()=> { return BatchCreate(ts, tableSuffix, ignoreInc); });
             }
         }
 
@@ -333,12 +327,12 @@ namespace Qing.DB
             return Query<T>(tableSuffix).RemoveAsync(expression);
         }
 
-        public int DeleteByPrimaryKeys<T>( string[] primaryKeys, string tableSuffix = null) where T : BaseEntity
+        public int DeleteByPrimaryKeys<T>(string[] primaryKeys, string tableSuffix = null) where T : BaseEntity
         {
             return Query<T>(tableSuffix).RemoveByPrimaryKeys(primaryKeys);
         }
 
-        public Task<int> DeleteByPrimaryKeysAsync<T>( string[] primaryKeys, string tableSuffix = null) where T : BaseEntity
+        public Task<int> DeleteByPrimaryKeysAsync<T>(string[] primaryKeys, string tableSuffix = null) where T : BaseEntity
         {
             return Query<T>(tableSuffix).RemoveByPrimaryKeysAsync(primaryKeys);
         }
@@ -346,13 +340,13 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
 
-            var nea = Tools.GetNEA(typeof(T),Tag);// Tools.GetNEA(typeof(T));
+            var nea = Tools.GetNEA(typeof(T), Tag);// Tools.GetNEA(typeof(T));
 
             ParamSql ps = new ParamSql();
-            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew,Tag);
+            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew, Tag);
             StringBuilder sb_setStr = new StringBuilder();
             foreach (var item in dic_update)
             {
@@ -360,14 +354,11 @@ namespace Qing.DB
                 ps.Params.AddDynamicParams(item.Params);
             }
             string setStr = sb_setStr.ToString().TrimStart(',');
-            var ps_where = ExpressionResolver.ResoveExpression(expressionWhere.Body,tag:Tag);
+            var ps_where = ExpressionResolver.ResoveExpression(expressionWhere.Body, tag: Tag);
             ps.Params.AddDynamicParams(ps_where.Params);
 
-            string sql = $"update {nea.TableName} set {setStr} where {ps_where.SqlStr};";
-            if (!string.IsNullOrEmpty(tableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, tableSuffix);
-            }
+            string sql = $"update {nea.TableSuffixName(tableSuffix)} set {setStr} where {ps_where.SqlStr};";
+
             return connectionItem.Execute(sql, ps.Params);
 
         }
@@ -376,13 +367,13 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
 
-            var nea = Tools.GetNEA(typeof(T),Tag);// Tools.GetNEA(typeof(T));
+            var nea = Tools.GetNEA(typeof(T), Tag);// Tools.GetNEA(typeof(T));
 
             ParamSql ps = new ParamSql();
-            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew,Tag);
+            var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew, Tag);
             StringBuilder sb_setStr = new StringBuilder();
             foreach (var item in dic_update)
             {
@@ -390,14 +381,11 @@ namespace Qing.DB
                 ps.Params.AddDynamicParams(item.Params);
             }
             string setStr = sb_setStr.ToString().TrimStart(',');
-            var ps_where = ExpressionResolver.ResoveExpression(expressionWhere.Body,tag:Tag);
+            var ps_where = ExpressionResolver.ResoveExpression(expressionWhere.Body, tag: Tag);
             ps.Params.AddDynamicParams(ps_where.Params);
 
-            string sql = $"update {nea.TableName} set {setStr} where {ps_where.SqlStr};";
-            if (!string.IsNullOrEmpty(tableSuffix))
-            {
-                sql = Tools.AppendTableSuffix(nea, sql, tableSuffix);
-            }
+            string sql = $"update {nea.TableSuffixName(tableSuffix)} set {setStr} where {ps_where.SqlStr};";
+
             return connectionItem.ExecuteAsync(sql, ps.Params);
 
         }
@@ -405,10 +393,10 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, tag);
             }
             ParamSql ps = new ParamSql();
-            var nea = Tools.GetNEA(typeof(T),tag);//Tools.GetNEA(typeof(T));
+            var nea = Tools.GetNEA(typeof(T), tag);//Tools.GetNEA(typeof(T));
             var pks = nea.PrimaryKey.Split(',').ToList();
             if (pks.Count != primaryKeys.Length)
             {
@@ -417,7 +405,7 @@ namespace Qing.DB
             }
             else
             {
-                var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew,tag);
+                var dic_update = ExpressionResolver.ResoveUpdateExpression(expressionNew, tag);
                 StringBuilder sb_setStr = new StringBuilder();
                 foreach (var item in dic_update)
                 {
@@ -435,12 +423,9 @@ namespace Qing.DB
                     ps.Params.Add(key, primaryKeys[i]);
                 }
 
-                StringBuilder sb_sql = new StringBuilder($"update  {nea._Lr}{connectionItem.SqlConnection.Database}{nea._Rr}.{nea.TableName} set {setStr} where {string.Join(" and ", wheres)};");
+                StringBuilder sb_sql = new StringBuilder($"update  {connectionItem.SqlConnection.Database}{nea._Rr}.{nea.TableSuffixName(tableSuffix)} set {setStr} where {string.Join(" and ", wheres)};");
                 string sql = sb_sql.ToString();
-                if (!string.IsNullOrEmpty(tableSuffix))
-                {
-                    sql = Tools.AppendTableSuffix(nea, sql, tableSuffix);
-                }
+
                 return connectionItem.Execute(sql, ps.Params);
 
             }
@@ -450,7 +435,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             ParamSql ps = new ParamSql();
             var nea = Tools.GetNEA(typeof(T), Tag);// Tools.GetNEA(typeof(T));
@@ -458,7 +443,7 @@ namespace Qing.DB
             if (pks.Count != primaryKeys.Length)
             {
                 SqlLogUtil.SendLog(LogType.Error, "DeleteByPrimaryKeys:主键参数数量不一致");
-                return  Task.FromResult(-1);
+                return Task.FromResult(-1);
             }
             else
             {
@@ -480,12 +465,9 @@ namespace Qing.DB
                     ps.Params.Add(key, primaryKeys[i]);
                 }
 
-                StringBuilder sb_sql = new StringBuilder($"update  {nea._Lr}{connectionItem.SqlConnection.Database}{nea._Lr}.{nea.TableName} set {setStr} where {string.Join(" and ", wheres)};");
+                StringBuilder sb_sql = new StringBuilder($"update  {nea._Lr}{connectionItem.SqlConnection.Database}{nea._Lr}.{nea.TableSuffixName(tableSuffix)} set {setStr} where {string.Join(" and ", wheres)};");
                 string sql = sb_sql.ToString();
-                if (!string.IsNullOrEmpty(tableSuffix))
-                {
-                    sql = Tools.AppendTableSuffix(nea, sql, tableSuffix);
-                }
+
                 return connectionItem.ExecuteAsync(sql, ps.Params);
 
             }
@@ -495,7 +477,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.Execute(sql);
         }
@@ -503,7 +485,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.ExecuteAsync(sql);
         }
@@ -512,7 +494,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.ExecuteScalar<T>(sql, parames);
         }
@@ -520,7 +502,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.ExecuteScalarAsync<T>(sql, parames);
         }
@@ -529,7 +511,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.ExecuteScalar<T>(sql);
         }
@@ -537,7 +519,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.ExecuteScalarAsync<T>(sql);
         }
@@ -546,7 +528,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.Execute(sql, parames);
         }
@@ -554,7 +536,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.ExecuteAsync(sql, parames);
         }
@@ -562,7 +544,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.ExecuteProcedure(procedureName, parames);
         }
@@ -570,15 +552,15 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.ExecuteProcedureAsync(procedureName, parames);
         }
-        public  T QuerySingleByProcedure<T>(string procedureName, DynamicParameters parames)
+        public T QuerySingleByProcedure<T>(string procedureName, DynamicParameters parames)
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.QuerySingleByProcedure<T>(procedureName, parames);
         }
@@ -587,7 +569,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.QuerySingleByProcedureAsync<T>(procedureName, parames);
         }
@@ -596,7 +578,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.QueryByProcedure<T>(procedureName, parames);
         }
@@ -605,7 +587,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.QueryByProcedureAsync<T>(procedureName, parames);
         }
@@ -613,7 +595,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.Query<T>(sql);
         }
@@ -622,7 +604,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.QueryAsync<T>(sql);
         }
@@ -631,7 +613,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.Query<T>(sql, parames);
         }
@@ -639,7 +621,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.QueryAsync<T>(sql, parames);
         }
@@ -648,7 +630,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.ExecuteReader(sql);
         }
@@ -656,7 +638,7 @@ namespace Qing.DB
         {
             if (connectionItem == null)
             {
-                connectionItem = DBConnPools.GetConnectionByDBID(DBName,Tag);
+                connectionItem = DBConnPools.GetConnectionByDBID(DBName, Tag);
             }
             return connectionItem.ExecuteReaderAsync(sql);
         }

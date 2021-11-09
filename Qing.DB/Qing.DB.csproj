@@ -1,19 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>NET461;netstandard2.0;netstandard2.1;netcoreapp3.1;netcoreapp5;</TargetFrameworks>
+    <TargetFrameworks>NET461;netstandard2.0;netstandard2.1;netcoreapp3.1;net5;net6;</TargetFrameworks>
     <AssemblyName>Qing.DB</AssemblyName>
     <RootNamespace>Qing.DB</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0.1</Version>
-    <Description>修复存储过程查询传参BUG</Description>
+    <Version>1.0.1</Version>
+    <Description>优化对SqlServer的支持</Description>
     <Authors>XuQing</Authors>
     <PackageReleaseNotes>基于Dapper的ORM组件，特点是支持多租户，分表</PackageReleaseNotes>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <AssemblyVersion>1.0.0.1</AssemblyVersion>
-    <FileVersion>1.0.0.1</FileVersion>
+    <AssemblyVersion>1.0.1</AssemblyVersion>
+    <FileVersion>1.0.1</FileVersion>
+    <Copyright>xuqing.me</Copyright>
 
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6|AnyCPU'">
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6|AnyCPU'">
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
 
 
